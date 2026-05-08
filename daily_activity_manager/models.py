@@ -169,6 +169,7 @@ class Journal:
     content: str = ""
     weather: str = ""
     mood: str = ""
+    images: List[str] = field(default_factory=list)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -181,6 +182,26 @@ class Journal:
             "content": self.content,
             "weather": self.weather,
             "mood": self.mood,
+            "images": self.images,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass
+class JournalComment:
+    """A comment on a journal entry."""
+    journal_id: str
+    user_id: str
+    content: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "journal_id": self.journal_id,
+            "user_id": self.user_id,
+            "content": self.content,
+            "created_at": self.created_at.isoformat(),
         }

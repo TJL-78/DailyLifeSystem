@@ -4,7 +4,7 @@ import json
 import os
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment
 
 
 class JSONCategoryStorage:
@@ -345,8 +345,72 @@ class JSONJournalStorage:
             content=d.get("content", ""),
             weather=d.get("weather", ""),
             mood=d.get("mood", ""),
+            images=d.get("images", []),
         )
         j.id = d["id"]
         j.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
         j.updated_at = datetime.fromisoformat(d["updated_at"]) if d.get("updated_at") else datetime.now()
         return j
+
+
+class JSONJournalCommentStorage:
+    """JSON storage for journal comments."""
+
+    def __init__(self, filepath: str = "journal_comments.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, comment: JournalComment):
+        items = self._read_all()
+        for i, c in enumerate(items):
+            if c["id"] == comment.id:
+                items[i] = comment.to_dict()
+                self._write_all(items)
+                return
+        items.append(comment.to_dict())
+        self._write_all(items)
+
+    def get_by_journal(self, journal_id: str) -> List[JournalComment]:
+        result = []
+        for c in self._read_all():
+            if c["journal_id"] == journal_id:
+                comment = JournalComment(
+                    journal_id=c["journal_id"],
+                    user_id=c["user_id"],
+                    content=c.get("content", ""),
+                )
+                comment.id = c["id"]
+                comment.created_at = datetime.fromisoformat(c["created_at"]) if c.get("created_at") else datetime.now()
+                result.append(comment)
+        result.sort(key=lambda x: x.created_at)
+        return result
+
+    def delete(self, comment_id: str):
+        items = self._read_all()
+        self._write_all([c for c in items if c["id"] != comment_id])
+
+    def get(self, comment_id: str) -> Optional[JournalComment]:
+        for c in self._read_all():
+            if c["id"] == comment_id:
+                comment = JournalComment(
+                    journal_id=c["journal_id"],
+                    user_id=c["user_id"],
+                    content=c.get("content", ""),
+                )
+                comment.id = c["id"]
+                comment.created_at = datetime.fromisoformat(c["created_at"]) if c.get("created_at") else datetime.now()
+                return comment
+        return None
+
+    def delete_by_journal(self, journal_id: str):
+        items = self._read_all()
+        self._write_all([c for c in items if c["journal_id"] != journal_id])

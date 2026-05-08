@@ -8,7 +8,7 @@ from datetime import datetime, date, time
 import pymysql
 import pymysql.cursors
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment
 from .user_model import User
 
 
@@ -529,12 +529,18 @@ class MySQLJournalStorage:
                         content TEXT,
                         weather VARCHAR(50),
                         mood VARCHAR(50),
+                        images TEXT,
                         created_at DATETIME NOT NULL,
                         updated_at DATETIME NOT NULL,
                         UNIQUE KEY (user_id, journal_date),
                         FOREIGN KEY (user_id) REFERENCES users(id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """)
+                # Add images column if missing (for existing tables)
+                try:
+                    cursor.execute("ALTER TABLE journals ADD COLUMN images TEXT AFTER mood")
+                except Exception:
+                    pass
             conn.commit()
         finally:
             conn.close()
@@ -544,12 +550,13 @@ class MySQLJournalStorage:
         try:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    """INSERT INTO journals (id, user_id, journal_date, content, weather, mood, created_at, updated_at)
-                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                    """INSERT INTO journals (id, user_id, journal_date, content, weather, mood, images, created_at, updated_at)
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
                        ON DUPLICATE KEY UPDATE content=VALUES(content), weather=VALUES(weather),
-                       mood=VALUES(mood), updated_at=VALUES(updated_at)""",
+                       mood=VALUES(mood), images=VALUES(images), updated_at=VALUES(updated_at)""",
                     (journal.id, journal.user_id, journal.journal_date, journal.content,
-                     journal.weather, journal.mood, journal.created_at, journal.updated_at))
+                     journal.weather, journal.mood, json.dumps(journal.images, ensure_ascii=False),
+                     journal.created_at, journal.updated_at))
             conn.commit()
         finally:
             conn.close()
@@ -593,9 +600,94 @@ class MySQLJournalStorage:
             conn.close()
 
     def _row(self, r):
+        images = json.loads(r["images"]) if r.get("images") else []
         j = Journal(user_id=r["user_id"], journal_date=r["journal_date"], content=r.get("content") or "",
-                    weather=r.get("weather") or "", mood=r.get("mood") or "")
+                    weather=r.get("weather") or "", mood=r.get("mood") or "", images=images)
         j.id = r["id"]
         j.created_at = r["created_at"]
         j.updated_at = r["updated_at"]
         return j
+
+
+class MySQLJournalCommentStorage:
+    """MySQL storage for journal comments."""
+
+    def __init__(self, db: Database):
+        self.db = db
+        self._init_table()
+
+    def _init_table(self):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journal_comments (
+                        id VARCHAR(36) PRIMARY KEY,
+                        journal_id VARCHAR(36) NOT NULL,
+                        user_id VARCHAR(36) NOT NULL,
+                        content TEXT,
+                        created_at DATETIME NOT NULL,
+                        INDEX idx_journal (journal_id),
+                        FOREIGN KEY (journal_id) REFERENCES journals(id) ON DELETE CASCADE,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """)
+            conn.commit()
+        finally:
+            conn.close()
+
+    def save(self, comment: JournalComment):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO journal_comments (id, journal_id, user_id, content, created_at)
+                       VALUES (%s,%s,%s,%s,%s)
+                       ON DUPLICATE KEY UPDATE content=VALUES(content)""",
+                    (comment.id, comment.journal_id, comment.user_id, comment.content, comment.created_at))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_by_journal(self, journal_id: str) -> List[JournalComment]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM journal_comments WHERE journal_id = %s ORDER BY created_at", (journal_id,))
+                return [self._row(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def delete(self, comment_id: str):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM journal_comments WHERE id = %s", (comment_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def delete_by_journal(self, journal_id: str):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM journal_comments WHERE journal_id = %s", (journal_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get(self, comment_id: str) -> Optional[JournalComment]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM journal_comments WHERE id = %s", (comment_id,))
+                r = cursor.fetchone()
+                return self._row(r) if r else None
+        finally:
+            conn.close()
+
+    def _row(self, r):
+        c = JournalComment(journal_id=r["journal_id"], user_id=r["user_id"], content=r.get("content") or "")
+        c.id = r["id"]
+        c.created_at = r["created_at"]
+        return c

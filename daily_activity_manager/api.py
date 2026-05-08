@@ -11,7 +11,7 @@ from datetime import date, time, datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response, send_from_directory
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment
 from .user_model import User
 
 app = Flask(__name__)
@@ -20,6 +20,10 @@ app.secret_key = os.environ.get("SECRET_KEY", "daily-life-system-secret-key-chan
 # Avatar upload directory
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads', 'avatars')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Journal image upload directory
+JOURNAL_IMG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads', 'journals')
+os.makedirs(JOURNAL_IMG_DIR, exist_ok=True)
 
 # Login attempt tracking and SMS code storage (in-memory)
 _login_attempts = {}   # key: IP or identifier -> {"count": int, "locked_until": datetime}
@@ -33,7 +37,7 @@ logger = logging.getLogger(__name__)
 _use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
 
 if _use_mysql:
-    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage, MySQLHabitStorage, MySQLHabitRecordStorage, MySQLJournalStorage
+    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage, MySQLHabitStorage, MySQLHabitRecordStorage, MySQLJournalStorage, MySQLJournalCommentStorage
     _db = Database()
     user_storage = MySQLUserStorage(_db)
     category_storage = MySQLCategoryStorage(_db)
@@ -41,15 +45,17 @@ if _use_mysql:
     habit_storage = MySQLHabitStorage(_db)
     habit_record_storage = MySQLHabitRecordStorage(_db)
     journal_storage = MySQLJournalStorage(_db)
+    journal_comment_storage = MySQLJournalCommentStorage(_db)
 else:
     from .user_storage import JSONUserStorage
-    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage
+    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage
     user_storage = JSONUserStorage("users.json")
     category_storage = JSONCategoryStorage("categories.json")
     activity_storage = JSONActivityStorage("activities.json")
     habit_storage = JSONHabitStorage("habits.json")
     habit_record_storage = JSONHabitRecordStorage("habit_records.json")
     journal_storage = JSONJournalStorage("journals.json")
+    journal_comment_storage = JSONJournalCommentStorage("journal_comments.json")
 
 
 def login_required(f):
@@ -717,6 +723,8 @@ def create_or_update_journal():
         existing.content = data.get("content", existing.content)
         existing.weather = data.get("weather", existing.weather)
         existing.mood = data.get("mood", existing.mood)
+        if "images" in data:
+            existing.images = data["images"]
         existing.updated_at = datetime.now()
         journal_storage.save(existing)
         return jsonify(existing.to_dict())
@@ -727,6 +735,7 @@ def create_or_update_journal():
         content=data.get("content", ""),
         weather=data.get("weather", ""),
         mood=data.get("mood", ""),
+        images=data.get("images", []),
     )
     journal_storage.save(journal)
     return jsonify(journal.to_dict()), 201
@@ -754,6 +763,8 @@ def update_journal(journal_id):
         journal.weather = data["weather"]
     if "mood" in data:
         journal.mood = data["mood"]
+    if "images" in data:
+        journal.images = data["images"]
     journal.updated_at = datetime.now()
     journal_storage.save(journal)
     return jsonify(journal.to_dict())
@@ -765,6 +776,7 @@ def delete_journal(journal_id):
     journal = journal_storage.get(journal_id)
     if not journal or journal.user_id != current_user_id():
         return jsonify({"error": "not found"}), 404
+    journal_comment_storage.delete_by_journal(journal_id)
     journal_storage.delete(journal_id)
     return jsonify({"message": "deleted"})
 
@@ -777,6 +789,89 @@ def get_journal_by_date(date_str):
     if not journal:
         return jsonify({"error": "not found"}), 404
     return jsonify(journal.to_dict())
+
+
+@app.route("/api/journals/upload-image", methods=["POST"])
+@login_required
+def upload_journal_image():
+    """Upload an image for a journal entry. Returns the image URL."""
+    import uuid as _uuid
+    if not request.files.get('image'):
+        return jsonify({"error": "请选择图片"}), 400
+    file = request.files['image']
+    if file.content_length and file.content_length > 5 * 1024 * 1024:
+        return jsonify({"error": "图片不能超过5MB"}), 400
+
+    # Determine extension
+    ext = os.path.splitext(file.filename)[1].lower() if file.filename else '.jpg'
+    if ext not in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+        ext = '.jpg'
+    filename = f"{_uuid.uuid4().hex}{ext}"
+    filepath = os.path.join(JOURNAL_IMG_DIR, filename)
+    file.save(filepath)
+
+    url = f"/uploads/journals/{filename}"
+    return jsonify({"url": url, "filename": filename})
+
+
+@app.route("/uploads/journals/<filename>")
+def serve_journal_image(filename):
+    return send_from_directory(JOURNAL_IMG_DIR, filename)
+
+
+# ---- Journal Comment Routes ----
+
+@app.route("/api/journals/<journal_id>/comments", methods=["GET"])
+@login_required
+def list_journal_comments(journal_id):
+    journal = journal_storage.get(journal_id)
+    if not journal or journal.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    comments = journal_comment_storage.get_by_journal(journal_id)
+    # Enrich with user display name
+    result = []
+    for c in comments:
+        d = c.to_dict()
+        user = user_storage.get_by_id(c.user_id)
+        d["display_name"] = user.display_name if user else "未知"
+        result.append(d)
+    return jsonify(result)
+
+
+@app.route("/api/journals/<journal_id>/comments", methods=["POST"])
+@login_required
+def add_journal_comment(journal_id):
+    journal = journal_storage.get(journal_id)
+    if not journal or journal.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json()
+    if not data or not data.get("content", "").strip():
+        return jsonify({"error": "评论内容不能为空"}), 400
+    comment = JournalComment(
+        journal_id=journal_id,
+        user_id=current_user_id(),
+        content=data["content"].strip(),
+    )
+    journal_comment_storage.save(comment)
+    d = comment.to_dict()
+    user = user_storage.get_by_id(current_user_id())
+    d["display_name"] = user.display_name if user else "未知"
+    return jsonify(d), 201
+
+
+@app.route("/api/journals/comments/<comment_id>", methods=["DELETE"])
+@login_required
+def delete_journal_comment(comment_id):
+    # Find the comment to verify ownership
+    comments_data = None
+    if hasattr(journal_comment_storage, 'get'):
+        comments_data = journal_comment_storage.get(comment_id)
+    if not comments_data:
+        return jsonify({"error": "not found"}), 404
+    if comments_data.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    journal_comment_storage.delete(comment_id)
+    return jsonify({"message": "deleted"})
 
 
 # ---- Export ----

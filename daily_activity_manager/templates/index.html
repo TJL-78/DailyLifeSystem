@@ -115,6 +115,35 @@
         .cal-day .day-num { font-weight: 600; margin-bottom: 2px; font-size: 13px; }
         .cal-day .cal-event { padding: 1px 4px; margin-bottom: 1px; border-radius: 3px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
         .cal-day-detail { margin-top: 16px; background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        /* Journal images */
+        .journal-images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; max-width: 360px; }
+        .journal-images img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; }
+        .journal-images.single-img { grid-template-columns: 1fr; max-width: 240px; }
+        .journal-images.two-img { grid-template-columns: 1fr 1fr; max-width: 300px; }
+        .journal-images.four-img { grid-template-columns: 1fr 1fr; max-width: 300px; }
+        .img-upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; color: #999; margin-top: 8px; transition: border-color 0.2s; }
+        .img-upload-area:hover { border-color: #3498db; color: #3498db; }
+        .img-preview-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .img-preview-item { position: relative; width: 80px; height: 80px; }
+        .img-preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .img-preview-item .img-remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #e74c3c; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
+
+        /* Journal comments */
+        .journal-comments { margin-top: 8px; padding: 8px 12px; background: #f7f7f7; border-radius: 6px; }
+        .journal-comment-item { font-size: 13px; padding: 4px 0; border-bottom: 1px solid #eee; display: flex; gap: 6px; align-items: flex-start; }
+        .journal-comment-item:last-child { border-bottom: none; }
+        .journal-comment-name { color: #3498db; font-weight: 500; flex-shrink: 0; }
+        .journal-comment-text { color: #333; flex: 1; word-break: break-all; }
+        .journal-comment-del { color: #ccc; cursor: pointer; font-size: 11px; flex-shrink: 0; }
+        .journal-comment-del:hover { color: #e74c3c; }
+        .journal-comment-add { display: flex; gap: 6px; margin-top: 6px; }
+        .journal-comment-add input { flex: 1; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px; }
+        .journal-comment-add button { padding: 6px 12px; border: none; background: #3498db; color: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        /* Image lightbox */
+        .img-lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: pointer; }
+        .img-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -308,8 +337,16 @@
                     <div class="form-row">
                         <textarea id="journalContent" data-i18n-placeholder="contentPlaceholder" style="width:100%;min-height:120px;resize:vertical;padding:10px 14px;border:1px solid #e0e0e0;border-radius:6px;font-size:14px;line-height:1.6"></textarea>
                     </div>
-                    <button class="btn-success" onclick="saveJournal()" data-i18n="saveJournal"></button>
-                    <span id="journalMsg" style="font-size:13px;margin-left:12px;color:#27ae60"></span>
+                    <!-- Image upload -->
+                    <div>
+                        <input type="file" id="journalImageInput" accept="image/*" multiple style="display:none" onchange="handleJournalImages(this)">
+                        <div class="img-upload-area" onclick="document.getElementById('journalImageInput').click()" data-i18n="clickUploadImages"></div>
+                        <div class="img-preview-grid" id="journalImagePreview"></div>
+                    </div>
+                    <div style="margin-top:10px">
+                        <button class="btn-success" onclick="saveJournal()" data-i18n="saveJournal"></button>
+                        <span id="journalMsg" style="font-size:13px;margin-left:12px;color:#27ae60"></span>
+                    </div>
                 </div>
                 <h3 class="section-title" style="margin-top:20px" data-i18n="journalHistory"></h3>
                 <div id="journalList"></div>
@@ -456,6 +493,9 @@
                 weatherRainy: '🌧️ 雨', weatherSnowy: '❄️ 雪', weatherWindy: '💨 大风',
                 moodHappy: '😊 开心', moodCalm: '😌 平静', moodSad: '😢 难过',
                 moodAngry: '😤 生气', moodTired: '😴 疲惫', moodExcited: '🤩 兴奋',
+                clickUploadImages: '📷 点击上传图片（最多9张）',
+                commentPlaceholder: '写评论...', sendComment: '发送',
+                noComments: '', imgUploading: '图片上传中...',
             },
             en: {
                 appTitle: 'Activity Manager', dashboard: '📊 Dashboard', allActivities: '📋 All Activities',
@@ -506,6 +546,9 @@
                 weatherRainy: '🌧️ Rainy', weatherSnowy: '❄️ Snowy', weatherWindy: '💨 Windy',
                 moodHappy: '😊 Happy', moodCalm: '😌 Calm', moodSad: '😢 Sad',
                 moodAngry: '😤 Angry', moodTired: '😴 Tired', moodExcited: '🤩 Excited',
+                clickUploadImages: '📷 Click to upload images (max 9)',
+                commentPlaceholder: 'Write a comment...', sendComment: 'Send',
+                noComments: '', imgUploading: 'Uploading...',
             }
         };
 
@@ -1069,14 +1112,15 @@
         // ---- Journal ----
         const weatherLabels = {sunny:'weatherSunny',cloudy:'weatherCloudy',overcast:'weatherOvercast',rainy:'weatherRainy',snowy:'weatherSnowy',windy:'weatherWindy'};
         const moodLabels = {happy:'moodHappy',calm:'moodCalm',excited:'moodExcited',sad:'moodSad',angry:'moodAngry',tired:'moodTired'};
+        let journalPendingImages = []; // URLs of images to save with journal
 
         function loadJournalPage() {
-            // Set default date to today
             const dateInput = document.getElementById('journalDate');
             if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
             document.getElementById('journalMsg').textContent = '';
+            journalPendingImages = [];
+            document.getElementById('journalImagePreview').innerHTML = '';
             loadJournalList();
-            // Try to load existing journal for selected date
             loadJournalForDate(dateInput.value);
             dateInput.onchange = function() { loadJournalForDate(this.value); };
         }
@@ -1088,11 +1132,47 @@
                 document.getElementById('journalWeather').value = j.weather || '';
                 document.getElementById('journalMood').value = j.mood || '';
                 document.getElementById('journalContent').value = j.content || '';
+                journalPendingImages = j.images || [];
+                renderImagePreviews();
             } else {
                 document.getElementById('journalWeather').value = '';
                 document.getElementById('journalMood').value = '';
                 document.getElementById('journalContent').value = '';
+                journalPendingImages = [];
+                renderImagePreviews();
             }
+        }
+
+        function renderImagePreviews() {
+            const container = document.getElementById('journalImagePreview');
+            container.innerHTML = journalPendingImages.map((url, i) =>
+                `<div class="img-preview-item">
+                    <img src="${url}" onclick="showLightbox('${url}')">
+                    <div class="img-remove" onclick="removeJournalImage(${i})">×</div>
+                </div>`
+            ).join('');
+        }
+
+        function removeJournalImage(idx) {
+            journalPendingImages.splice(idx, 1);
+            renderImagePreviews();
+        }
+
+        async function handleJournalImages(input) {
+            if (!input.files || !input.files.length) return;
+            const remaining = 9 - journalPendingImages.length;
+            const files = Array.from(input.files).slice(0, remaining);
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+                const res = await fetch(`${API}/journals/upload-image`, { method: 'POST', body: formData });
+                if (res.ok) {
+                    const data = await res.json();
+                    journalPendingImages.push(data.url);
+                }
+            }
+            renderImagePreviews();
+            input.value = '';
         }
 
         async function saveJournal() {
@@ -1104,13 +1184,29 @@
 
             const res = await fetch(`${API}/journals`, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ journal_date, content, weather, mood })
+                body: JSON.stringify({ journal_date, content, weather, mood, images: journalPendingImages })
             });
             if (res.ok) {
                 document.getElementById('journalMsg').textContent = t('journalSaved');
                 setTimeout(() => { document.getElementById('journalMsg').textContent = ''; }, 2000);
                 loadJournalList();
             }
+        }
+
+        function renderJournalImages(images) {
+            if (!images || !images.length) return '';
+            const countClass = images.length === 1 ? 'single-img' : images.length === 2 ? 'two-img' : images.length === 4 ? 'four-img' : '';
+            return `<div class="journal-images ${countClass}">${images.map(url =>
+                `<img src="${url}" onclick="event.stopPropagation();showLightbox('${url}')">`
+            ).join('')}</div>`;
+        }
+
+        function showLightbox(url) {
+            const lb = document.createElement('div');
+            lb.className = 'img-lightbox';
+            lb.innerHTML = `<img src="${url}">`;
+            lb.onclick = () => lb.remove();
+            document.body.appendChild(lb);
         }
 
         async function loadJournalList() {
@@ -1125,12 +1221,14 @@
                 const wLabel = j.weather ? t(weatherLabels[j.weather] || j.weather) : '';
                 const mLabel = j.mood ? t(moodLabels[j.mood] || j.mood) : '';
                 const contentHtml = j.content ? escapeHtml(j.content) : '';
+                const imagesHtml = renderJournalImages(j.images);
                 return `<div class="add-section" style="margin-bottom:8px">
                     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleJournalContent('jcontent-${idx}')">
                         <div style="display:flex;align-items:center;gap:10px">
                             <span style="font-weight:600;font-size:14px">${j.journal_date}</span>
                             ${wLabel ? `<span style="font-size:13px">${wLabel}</span>` : ''}
                             ${mLabel ? `<span style="font-size:13px">${mLabel}</span>` : ''}
+                            ${j.images && j.images.length ? `<span style="font-size:12px;color:#3498db">📷${j.images.length}</span>` : ''}
                             <span style="font-size:12px;color:#bbb">▶</span>
                         </div>
                         <div style="display:flex;gap:6px">
@@ -1138,9 +1236,22 @@
                             <button style="padding:4px 8px;border:1px solid #e74c3c;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#e74c3c" onclick="event.stopPropagation();deleteJournal('${j.id}')">${t('delete')}</button>
                         </div>
                     </div>
-                    <div id="jcontent-${idx}" style="display:none;font-size:13px;color:#555;margin-top:10px;padding:10px;background:#f9f9f9;border-radius:6px;white-space:pre-line;line-height:1.6">${contentHtml || '<span style="color:#ccc">--</span>'}</div>
+                    <div id="jcontent-${idx}" style="display:none">
+                        <div style="font-size:13px;color:#555;margin-top:10px;padding:10px;background:#f9f9f9;border-radius:6px;white-space:pre-line;line-height:1.6">${contentHtml || '<span style="color:#ccc">--</span>'}</div>
+                        ${imagesHtml}
+                        <div class="journal-comments" id="jcomments-${j.id}"></div>
+                        <div class="journal-comment-add">
+                            <input type="text" id="jcomment-input-${j.id}" placeholder="${t('commentPlaceholder')}" onkeypress="if(event.key==='Enter')addJournalComment('${j.id}')">
+                            <button onclick="addJournalComment('${j.id}')">${t('sendComment')}</button>
+                        </div>
+                    </div>
                 </div>`;
             }).join('');
+
+            // Load comments for all journals
+            for (const j of journals) {
+                loadJournalComments(j.id);
+            }
         }
 
         function toggleJournalContent(id) {
@@ -1164,6 +1275,42 @@
             if (!confirm(t('confirmDeleteJournal'))) return;
             await fetch(`${API}/journals/${id}`, { method: 'DELETE' });
             loadJournalList();
+        }
+
+        // ---- Journal Comments ----
+        async function loadJournalComments(journalId) {
+            const container = document.getElementById(`jcomments-${journalId}`);
+            if (!container) return;
+            const res = await fetch(`${API}/journals/${journalId}/comments`);
+            if (!res.ok) { container.innerHTML = ''; return; }
+            const comments = await res.json();
+            if (!comments.length) { container.innerHTML = ''; return; }
+            container.innerHTML = comments.map(c =>
+                `<div class="journal-comment-item">
+                    <span class="journal-comment-name">${escapeHtml(c.display_name)}:</span>
+                    <span class="journal-comment-text">${escapeHtml(c.content)}</span>
+                    <span class="journal-comment-del" onclick="deleteJournalComment('${c.id}','${journalId}')">✕</span>
+                </div>`
+            ).join('');
+        }
+
+        async function addJournalComment(journalId) {
+            const input = document.getElementById(`jcomment-input-${journalId}`);
+            const content = input.value.trim();
+            if (!content) return;
+            const res = await fetch(`${API}/journals/${journalId}/comments`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ content })
+            });
+            if (res.ok) {
+                input.value = '';
+                loadJournalComments(journalId);
+            }
+        }
+
+        async function deleteJournalComment(commentId, journalId) {
+            await fetch(`${API}/journals/comments/${commentId}`, { method: 'DELETE' });
+            loadJournalComments(journalId);
         }
 
         // ---- Settings ----
