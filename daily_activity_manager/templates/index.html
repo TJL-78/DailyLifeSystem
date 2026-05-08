@@ -1112,12 +1112,14 @@
 
         function loadJournalPage() {
             const dateInput = document.getElementById('journalDate');
-            if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+            dateInput.value = new Date().toISOString().split('T')[0];
             document.getElementById('journalMsg').textContent = '';
+            document.getElementById('journalWeather').value = '';
+            document.getElementById('journalMood').value = '';
+            document.getElementById('journalContent').value = '';
             journalPendingImages = [];
             document.getElementById('journalImagePreview').innerHTML = '';
             loadJournalList();
-            loadJournalForDate(dateInput.value);
             dateInput.onchange = function() { loadJournalForDate(this.value); };
         }
 
