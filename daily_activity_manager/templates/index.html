@@ -283,6 +283,8 @@
                         <div id="weeklyChart"></div>
                     </div>
                 </div>
+                <!-- Category time breakdown with pie charts -->
+                <div id="categoryTimeSection" style="margin-top:16px"></div>
                 <div style="margin-top:16px">
                     <button class="btn-primary" onclick="exportJSON()" data-i18n="exportJSON"></button>
                     <button class="btn-primary" onclick="exportCSV()" style="margin-left:8px" data-i18n="exportCSV"></button>
@@ -396,6 +398,9 @@
                 profileUpdated: '更新成功', phoneInvalid: '手机号格式不正确',
                 pwChanged: '密码修改成功', avatarUpdated: '头像更新成功',
                 unclassified: '未分类',
+                catTimeTitle: '分类执行时间分析',
+                totalTime2: '总计', minutes: '分钟', proportion: '占比',
+                noTimeData: '暂无执行时间数据（请为活动设置时长）',
             },
             en: {
                 appTitle: 'Activity Manager', dashboard: '📊 Dashboard', allActivities: '📋 All Activities',
@@ -434,6 +439,9 @@
                 profileUpdated: 'Updated', phoneInvalid: 'Invalid phone number',
                 pwChanged: 'Password changed', avatarUpdated: 'Avatar updated',
                 unclassified: 'Uncategorized',
+                catTimeTitle: 'Category Time Analysis',
+                totalTime2: 'Total', minutes: 'min', proportion: 'Share',
+                noTimeData: 'No time data (set duration for activities)',
             }
         };
 
@@ -914,6 +922,78 @@
                 weekHtml += `<div style="margin-bottom:10px"><div style="font-size:12px;color:#888;margin-bottom:4px">${label} ${t('weekLabel')}</div><div style="display:flex;gap:4px;align-items:center"><div style="height:14px;background:#3498db;border-radius:3px;width:${Math.round(w.created/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">${t('newAdded')} ${w.created}</span></div><div style="display:flex;gap:4px;align-items:center;margin-top:2px"><div style="height:14px;background:#27ae60;border-radius:3px;width:${Math.round(w.completed/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">${t('completedLabel')} ${w.completed}</span></div></div>`;
             }
             document.getElementById('weeklyChart').innerHTML = weekHtml || `<div class="empty-msg">${t('noData')}</div>`;
+
+            // Category time breakdown with pie charts
+            renderCategoryTimePies(stats.category_time || []);
+        }
+
+        function renderPieChart(tasks, size) {
+            const total = tasks.reduce((s, t) => s + t.minutes, 0);
+            if (total === 0) return '';
+            const cx = size / 2, cy = size / 2, r = size / 2 - 4;
+            const colors = ['#3498db','#e74c3c','#27ae60','#f39c12','#9b59b6','#1abc9c','#e67e22','#2ecc71','#3498db','#e91e63','#00bcd4','#ff9800'];
+            let startAngle = -Math.PI / 2;
+            let paths = '';
+            let legendHtml = '';
+
+            tasks.forEach((task, i) => {
+                const pct = task.minutes / total;
+                const angle = pct * 2 * Math.PI;
+                const endAngle = startAngle + angle;
+                const largeArc = angle > Math.PI ? 1 : 0;
+                const x1 = cx + r * Math.cos(startAngle);
+                const y1 = cy + r * Math.sin(startAngle);
+                const x2 = cx + r * Math.cos(endAngle);
+                const y2 = cy + r * Math.sin(endAngle);
+                const color = colors[i % colors.length];
+
+                if (tasks.length === 1) {
+                    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.85"/>`;
+                } else {
+                    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${color}" opacity="0.85">
+                        <title>${escapeHtml(task.title)}: ${task.minutes}${t('minutes')} (${Math.round(pct*100)}%)</title>
+                    </path>`;
+                }
+
+                legendHtml += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px">
+                    <span style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0;display:inline-block"></span>
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(task.title)}">${escapeHtml(task.title)}</span>
+                    <span style="color:#888;white-space:nowrap">${task.minutes}${t('minutes')} (${Math.round(pct*100)}%)</span>
+                </div>`;
+
+                startAngle = endAngle;
+            });
+
+            const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
+            return { svg, legendHtml };
+        }
+
+        function renderCategoryTimePies(categoryTime) {
+            const container = document.getElementById('categoryTimeSection');
+            if (!categoryTime.length) {
+                container.innerHTML = `<div class="add-section"><h3>${t('catTimeTitle')}</h3><div class="empty-msg">${t('noTimeData')}</div></div>`;
+                return;
+            }
+
+            let html = `<h3 class="section-title" style="margin-bottom:12px">${t('catTimeTitle')}</h3>`;
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px">';
+
+            for (const cat of categoryTime) {
+                const pie = renderPieChart(cat.tasks, 160);
+                html += `<div class="add-section" style="margin-bottom:0">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                        <span style="width:12px;height:12px;border-radius:50%;background:${cat.color};display:inline-block"></span>
+                        <h3 style="font-size:15px;margin:0">${escapeHtml(cat.name)}</h3>
+                        <span style="font-size:13px;color:#888;margin-left:auto">${t('totalTime2')}: ${cat.total_minutes}${t('minutes')}</span>
+                    </div>
+                    <div style="display:flex;gap:16px;align-items:flex-start">
+                        <div style="flex-shrink:0">${pie.svg}</div>
+                        <div style="flex:1;max-height:160px;overflow-y:auto">${pie.legendHtml}</div>
+                    </div>
+                </div>`;
+            }
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         function exportJSON() { window.location.href = `${API}/export/json`; }

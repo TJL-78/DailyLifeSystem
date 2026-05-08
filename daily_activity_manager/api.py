@@ -567,6 +567,23 @@ def get_detailed_stats():
     # Total time
     total_minutes = sum(a.duration_minutes or 0 for a in all_acts if a.status == ActivityStatus.COMPLETED)
 
+    # Per-category time breakdown with individual task times
+    category_time = {}
+    for a in all_acts:
+        if not (a.duration_minutes and a.duration_minutes > 0):
+            continue
+        cat_id = a.category_id or "__none__"
+        cname = cat_map.get(a.category_id, {}).get("name", "未分类") if a.category_id else "未分类"
+        ccolor = cat_map.get(a.category_id, {}).get("color", "#95a5a6") if a.category_id else "#95a5a6"
+        if cname not in category_time:
+            category_time[cname] = {"name": cname, "color": ccolor, "total_minutes": 0, "tasks": []}
+        category_time[cname]["total_minutes"] += a.duration_minutes
+        category_time[cname]["tasks"].append({
+            "title": a.title,
+            "minutes": a.duration_minutes,
+            "status": a.status.value,
+        })
+
     return jsonify({
         "by_category": by_category,
         "weekly_trend": weekly,
@@ -574,6 +591,7 @@ def get_detailed_stats():
         "total": len(all_acts),
         "completed": len([a for a in all_acts if a.status == ActivityStatus.COMPLETED]),
         "pending": len([a for a in all_acts if a.status == ActivityStatus.PENDING]),
+        "category_time": list(category_time.values()),
     })
 
 
