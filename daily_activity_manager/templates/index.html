@@ -252,6 +252,7 @@
                             <button onclick="calPrev()" data-i18n="prevMonth"></button>
                         </div>
                         <h3 id="calTitle"></h3>
+                        <button onclick="calToday()" style="background:#3498db;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px" data-i18n="calToday"></button>
                         <div style="display:flex;gap:4px">
                             <button onclick="calNext()" data-i18n="nextMonth"></button>
                             <button onclick="calNextYear()" data-i18n="nextYear"></button>
@@ -474,7 +475,7 @@
                 catDistribution: '分类分布', weeklyTrend: '每周趋势（近4周）',
                 exportJSON: '导出 JSON', exportCSV: '导出 CSV', noData: '暂无数据',
                 newAdded: '新增', completedLabel: '完成', weekLabel: '周',
-                calTitle: '日历视图', prevYear: '◀◀ 上年', prevMonth: '◀ 上月', nextMonth: '下月 ▶', nextYear: '下年 ▶▶',
+                calTitle: '日历视图', prevYear: '◀◀ 上年', prevMonth: '◀ 上月', nextMonth: '下月 ▶', nextYear: '下年 ▶▶', calToday: '今天',
                 dayDetail: '的活动', noDayActs: '当天无活动', noMatch: '未找到匹配的活动',
                 start: '开始', cancel: '取消', delete: '删除', confirmDelete: '确定删除？',
                 subtask: '子任务', addSubtaskPlaceholder: '添加子任务...',
@@ -528,7 +529,7 @@
                 catDistribution: 'Category Distribution', weeklyTrend: 'Weekly Trend (4 weeks)',
                 exportJSON: 'Export JSON', exportCSV: 'Export CSV', noData: 'No data',
                 newAdded: 'New', completedLabel: 'Done', weekLabel: 'week',
-                calTitle: 'Calendar', prevYear: '◀◀ Year', prevMonth: '◀ Prev', nextMonth: 'Next ▶', nextYear: 'Year ▶▶',
+                calTitle: 'Calendar', prevYear: '◀◀ Year', prevMonth: '◀ Prev', nextMonth: 'Next ▶', nextYear: 'Year ▶▶', calToday: 'Today',
                 dayDetail: ' activities', noDayActs: 'No activities this day', noMatch: 'No matching activities',
                 start: 'Start', cancel: 'Cancel', delete: 'Delete', confirmDelete: 'Confirm delete?',
                 subtask: 'Subtask', addSubtaskPlaceholder: 'Add subtask...',
@@ -899,6 +900,7 @@
         function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
         function calPrevYear() { calYear--; renderCalendar(); }
         function calNextYear() { calYear++; renderCalendar(); }
+        function calToday() { const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth(); renderCalendar(); }
 
         function showDayDetail(dateStr) {
             const events = calEvents[dateStr] || [];
