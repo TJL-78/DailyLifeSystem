@@ -1166,6 +1166,16 @@
         async function handleJournalImages(input) {
             if (!input.files || !input.files.length) return;
             const remaining = 9 - journalPendingImages.length;
+            if (remaining <= 0) {
+                alert(currentLang === 'en' ? 'Maximum 9 images allowed' : '最多只能上传9张图片');
+                input.value = '';
+                return;
+            }
+            if (input.files.length > remaining) {
+                alert(currentLang === 'en'
+                    ? `You can only add ${remaining} more image(s), selected ${input.files.length}`
+                    : `还能添加${remaining}张图片，您选择了${input.files.length}张，多余的将被忽略`);
+            }
             const files = Array.from(input.files).slice(0, remaining);
             for (const file of files) {
                 const formData = new FormData();
