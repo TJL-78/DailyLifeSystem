@@ -1121,22 +1121,37 @@
                 container.innerHTML = `<div class="empty-msg">${t('noJournals')}</div>`;
                 return;
             }
-            container.innerHTML = journals.map(j => {
+            container.innerHTML = journals.map((j, idx) => {
                 const wLabel = j.weather ? t(weatherLabels[j.weather] || j.weather) : '';
                 const mLabel = j.mood ? t(moodLabels[j.mood] || j.mood) : '';
-                const preview = (j.content || '').substring(0, 100) + (j.content && j.content.length > 100 ? '...' : '');
-                return `<div class="add-section" style="margin-bottom:8px;cursor:pointer" onclick="viewJournal('${j.journal_date}')">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
+                const contentHtml = j.content ? escapeHtml(j.content) : '';
+                return `<div class="add-section" style="margin-bottom:8px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleJournalContent('jcontent-${idx}')">
                         <div style="display:flex;align-items:center;gap:10px">
                             <span style="font-weight:600;font-size:14px">${j.journal_date}</span>
                             ${wLabel ? `<span style="font-size:13px">${wLabel}</span>` : ''}
                             ${mLabel ? `<span style="font-size:13px">${mLabel}</span>` : ''}
+                            <span style="font-size:12px;color:#bbb">▶</span>
                         </div>
-                        <button style="padding:4px 8px;border:1px solid #e74c3c;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#e74c3c" onclick="event.stopPropagation();deleteJournal('${j.id}')">${t('delete')}</button>
+                        <div style="display:flex;gap:6px">
+                            <button style="padding:4px 8px;border:1px solid #3498db;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#3498db" onclick="event.stopPropagation();viewJournal('${j.journal_date}')">${t('writeJournal')}</button>
+                            <button style="padding:4px 8px;border:1px solid #e74c3c;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#e74c3c" onclick="event.stopPropagation();deleteJournal('${j.id}')">${t('delete')}</button>
+                        </div>
                     </div>
-                    ${preview ? `<div style="font-size:13px;color:#666;margin-top:6px;white-space:pre-line">${escapeHtml(preview)}</div>` : ''}
+                    <div id="jcontent-${idx}" style="display:none;font-size:13px;color:#555;margin-top:10px;padding:10px;background:#f9f9f9;border-radius:6px;white-space:pre-line;line-height:1.6">${contentHtml || '<span style="color:#ccc">--</span>'}</div>
                 </div>`;
             }).join('');
+        }
+
+        function toggleJournalContent(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                el.previousElementSibling.querySelector('span:last-of-type').textContent = '▼';
+            } else {
+                el.style.display = 'none';
+                el.previousElementSibling.querySelector('span:last-of-type').textContent = '▶';
+            }
         }
 
         function viewJournal(dateStr) {
