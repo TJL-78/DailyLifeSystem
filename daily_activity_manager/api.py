@@ -5,6 +5,8 @@ import csv
 import io
 import re
 import base64
+import random
+import logging
 from datetime import date, time, datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response, send_from_directory
@@ -18,6 +20,14 @@ app.secret_key = os.environ.get("SECRET_KEY", "daily-life-system-secret-key-chan
 # Avatar upload directory
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads', 'avatars')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Login attempt tracking and SMS code storage (in-memory)
+_login_attempts = {}   # key: IP or identifier -> {"count": int, "locked_until": datetime}
+_sms_codes = {}        # key: phone -> {"code": str, "expires": datetime}
+LOGIN_MAX_ATTEMPTS = 3
+LOGIN_LOCKOUT_SECONDS = 60
+
+logger = logging.getLogger(__name__)
 
 # Storage initialization
 _use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
@@ -101,8 +111,51 @@ def api_register():
     return jsonify({"message": "注册成功", "user": user.to_dict()}), 201
 
 
+def _get_client_key():
+    """Get a key to track login attempts per client."""
+    return request.remote_addr or "unknown"
+
+
+def _check_lockout():
+    """Check if client is locked out. Returns (locked, remaining_seconds)."""
+    key = _get_client_key()
+    info = _login_attempts.get(key)
+    if info and info.get("locked_until"):
+        remaining = (info["locked_until"] - datetime.now()).total_seconds()
+        if remaining > 0:
+            return True, int(remaining)
+        else:
+            # Lockout expired, reset
+            _login_attempts.pop(key, None)
+    return False, 0
+
+
+def _record_failed_attempt():
+    """Record a failed login attempt. Returns (locked, remaining_seconds)."""
+    key = _get_client_key()
+    info = _login_attempts.get(key, {"count": 0})
+    info["count"] = info.get("count", 0) + 1
+    if info["count"] >= LOGIN_MAX_ATTEMPTS:
+        info["locked_until"] = datetime.now() + timedelta(seconds=LOGIN_LOCKOUT_SECONDS)
+        _login_attempts[key] = info
+        return True, LOGIN_LOCKOUT_SECONDS
+    _login_attempts[key] = info
+    return False, 0
+
+
+def _clear_attempts():
+    """Clear login attempts for current client."""
+    key = _get_client_key()
+    _login_attempts.pop(key, None)
+
+
 @app.route("/api/auth/login", methods=["POST"])
 def api_login():
+    # Check lockout
+    locked, remaining = _check_lockout()
+    if locked:
+        return jsonify({"error": f"登录尝试过多，请{remaining}秒后再试", "locked": True, "remaining": remaining}), 429
+
     data = request.get_json()
     if not data:
         return jsonify({"error": "no data"}), 400
@@ -113,11 +166,93 @@ def api_login():
 
     user = user_storage.get_by_username(username)
     if not user or not User.verify_password(password, user.password_hash):
-        return jsonify({"error": "用户名或密码错误"}), 401
+        locked, remaining = _record_failed_attempt()
+        if locked:
+            return jsonify({"error": f"登录尝试过多，请{remaining}秒后再试", "locked": True, "remaining": remaining}), 429
+        attempts_left = LOGIN_MAX_ATTEMPTS - _login_attempts.get(_get_client_key(), {}).get("count", 0)
+        return jsonify({"error": f"用户名或密码错误，还剩{attempts_left}次机会"}), 401
 
+    _clear_attempts()
     session["user_id"] = user.id
     session["username"] = user.username
     return jsonify({"message": "登录成功", "user": user.to_dict()})
+
+
+@app.route("/api/auth/sms/send", methods=["POST"])
+def send_sms_code():
+    """Send SMS verification code (simulated - code logged to console)."""
+    locked, remaining = _check_lockout()
+    if locked:
+        return jsonify({"error": f"操作过于频繁，请{remaining}秒后再试", "locked": True, "remaining": remaining}), 429
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+    phone = data.get("phone", "").strip()
+    if not phone or not re.match(r'^\+?[\d]{6,20}$', phone):
+        return jsonify({"error": "手机号格式不正确"}), 400
+
+    # Check if user with this phone exists
+    user = user_storage.get_by_phone(phone)
+    if not user:
+        return jsonify({"error": "该手机号未绑定任何账号"}), 404
+
+    # Generate 6-digit code, valid for 5 minutes
+    code = str(random.randint(100000, 999999))
+    _sms_codes[phone] = {"code": code, "expires": datetime.now() + timedelta(minutes=5)}
+
+    # In production, send via SMS gateway. Here we log it.
+    logger.warning(f"[SMS] Verification code for {phone}: {code}")
+    print(f"\n{'='*40}\n  验证码 (Verification Code): {code}\n  手机号 (Phone): {phone}\n  有效期: 5分钟\n{'='*40}\n")
+
+    return jsonify({"message": "验证码已发送"})
+
+
+@app.route("/api/auth/sms/login", methods=["POST"])
+def sms_login():
+    """Login via phone + SMS verification code."""
+    locked, remaining = _check_lockout()
+    if locked:
+        return jsonify({"error": f"登录尝试过多，请{remaining}秒后再试", "locked": True, "remaining": remaining}), 429
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+    phone = data.get("phone", "").strip()
+    code = data.get("code", "").strip()
+    if not phone or not code:
+        return jsonify({"error": "请输入手机号和验证码"}), 400
+
+    # Verify code
+    sms_info = _sms_codes.get(phone)
+    if not sms_info or sms_info["code"] != code:
+        locked, remaining = _record_failed_attempt()
+        if locked:
+            return jsonify({"error": f"登录尝试过多，请{remaining}秒后再试", "locked": True, "remaining": remaining}), 429
+        attempts_left = LOGIN_MAX_ATTEMPTS - _login_attempts.get(_get_client_key(), {}).get("count", 0)
+        return jsonify({"error": f"验证码错误，还剩{attempts_left}次机会"}), 401
+
+    if datetime.now() > sms_info["expires"]:
+        _sms_codes.pop(phone, None)
+        return jsonify({"error": "验证码已过期，请重新获取"}), 401
+
+    # Code valid, find user
+    user = user_storage.get_by_phone(phone)
+    if not user:
+        return jsonify({"error": "该手机号未绑定任何账号"}), 404
+
+    _sms_codes.pop(phone, None)
+    _clear_attempts()
+    session["user_id"] = user.id
+    session["username"] = user.username
+    return jsonify({"message": "登录成功", "user": user.to_dict()})
+
+
+@app.route("/api/auth/lockout", methods=["GET"])
+def check_lockout():
+    """Check if current client is locked out."""
+    locked, remaining = _check_lockout()
+    return jsonify({"locked": locked, "remaining": remaining})
 
 
 @app.route("/api/auth/logout", methods=["POST"])

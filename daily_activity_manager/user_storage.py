@@ -47,6 +47,12 @@ class JSONUserStorage:
     def username_exists(self, username: str) -> bool:
         return self.get_by_username(username) is not None
 
+    def get_by_phone(self, phone: str) -> Optional[User]:
+        for u in self._read_all():
+            if u.get("phone") and u["phone"] == phone:
+                return User.from_dict(u)
+        return None
+
 
 class MySQLUserStorage:
     """MySQL-based user storage."""
@@ -120,3 +126,15 @@ class MySQLUserStorage:
 
     def username_exists(self, username: str) -> bool:
         return self.get_by_username(username) is not None
+
+    def get_by_phone(self, phone: str) -> Optional[User]:
+        conn = self._get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM users WHERE phone = %s", (phone,))
+                row = cursor.fetchone()
+                if row:
+                    return User.from_dict(row)
+                return None
+        finally:
+            conn.close()
