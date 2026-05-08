@@ -124,9 +124,12 @@
             <div class="nav-item active" data-page="dashboard">📊 仪表盘</div>
             <div class="nav-item" data-page="activities">📋 全部活动</div>
             <div class="nav-item" data-page="calendar">📅 日历视图</div>
+            <div class="nav-item" data-page="habits">🎯 习惯追踪</div>
+            <div class="nav-item" data-page="statistics">📈 统计分析</div>
             <div class="nav-section">分类</div>
             <div id="sidebarCategories"></div>
             <div class="nav-item" data-page="categories">⚙️ 管理分类</div>
+            <div class="nav-item" data-page="settings">👤 个人设置</div>
             <div class="user-section">
                 <div class="username" id="sidebarUser"></div>
                 <button class="btn-logout" onclick="doLogout()">退出登录</button>
@@ -236,6 +239,69 @@
                 </div>
                 <ul class="cat-list" id="catList"></ul>
             </div>
+
+            <!-- Habits -->
+            <div class="page" id="pageHabits">
+                <h2 class="section-title">习惯追踪</h2>
+                <div class="add-section">
+                    <h3>添加习惯</h3>
+                    <div class="form-row">
+                        <input type="text" id="habitName" placeholder="习惯名称 *">
+                        <input type="text" id="habitDesc" placeholder="描述（可选）" style="flex:1">
+                        <select id="habitFreq">
+                            <option value="daily">每天</option>
+                            <option value="weekly">每周</option>
+                        </select>
+                        <input type="number" id="habitTarget" value="1" min="1" style="width:70px" title="目标次数">
+                        <input type="color" id="habitColor" value="#27ae60" style="width:50px;height:34px;padding:2px">
+                        <button class="btn-success" onclick="addHabit()">添加</button>
+                    </div>
+                </div>
+                <div id="habitList"></div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="page" id="pageStatistics">
+                <h2 class="section-title">统计分析</h2>
+                <div class="dashboard-stats" id="statsSummary"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+                    <div class="add-section">
+                        <h3>分类分布</h3>
+                        <div id="catChart"></div>
+                    </div>
+                    <div class="add-section">
+                        <h3>每周趋势（近4周）</h3>
+                        <div id="weeklyChart"></div>
+                    </div>
+                </div>
+                <div style="margin-top:16px">
+                    <button class="btn-primary" onclick="exportJSON()">导出 JSON</button>
+                    <button class="btn-primary" onclick="exportCSV()" style="margin-left:8px">导出 CSV</button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="page" id="pageSettings">
+                <h2 class="section-title">个人设置</h2>
+                <div class="add-section">
+                    <h3>个人资料</h3>
+                    <div class="form-row">
+                        <input type="text" id="settingName" placeholder="显示名称">
+                        <input type="email" id="settingEmail" placeholder="邮箱">
+                        <button class="btn-primary" onclick="saveProfile()">保存</button>
+                    </div>
+                    <div id="profileMsg" style="color:#27ae60;font-size:13px;margin-top:8px"></div>
+                </div>
+                <div class="add-section" style="margin-top:16px">
+                    <h3>修改密码</h3>
+                    <div class="form-row">
+                        <input type="password" id="oldPassword" placeholder="旧密码">
+                        <input type="password" id="newPassword" placeholder="新密码（至少6位）">
+                        <button class="btn-primary" onclick="changePassword()">修改</button>
+                    </div>
+                    <div id="pwMsg" style="font-size:13px;margin-top:8px"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -257,6 +323,9 @@
             else if (page === 'activities') { isSearchMode = false; loadActivities(); }
             else if (page === 'calendar') loadCalendar();
             else if (page === 'categories') loadCategoryPage();
+            else if (page === 'habits') loadHabitsPage();
+            else if (page === 'statistics') loadStatisticsPage();
+            else if (page === 'settings') loadSettingsPage();
         }
 
         document.querySelectorAll('.nav-item[data-page]').forEach(el => {
@@ -563,6 +632,168 @@
             document.getElementById('calDetailList').innerHTML = events.length
                 ? events.map(a => renderActivity(a, false)).join('')
                 : '<div class="empty-msg">当天无活动</div>';
+        }
+
+        // ---- Habits ----
+        async function loadHabitsPage() {
+            const res = await fetch(`${API}/habits`);
+            const habits = await res.json();
+            const container = document.getElementById('habitList');
+            if (!habits.length) { container.innerHTML = '<div class="empty-msg">暂无习惯，添加一个开始追踪吧</div>'; return; }
+
+            const today = new Date().toISOString().split('T')[0];
+            let html = '';
+            for (const h of habits) {
+                // Get last 30 days records
+                const end = today;
+                const startD = new Date(); startD.setDate(startD.getDate() - 29);
+                const start = startD.toISOString().split('T')[0];
+                const recRes = await fetch(`${API}/habits/${h.id}/records?start=${start}&end=${end}`);
+                const records = await recRes.json();
+                const checkedDates = new Set(records.map(r => r.record_date));
+
+                // Build 30-day grid
+                let grid = '';
+                for (let i = 29; i >= 0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const ds = d.toISOString().split('T')[0];
+                    const checked = checkedDates.has(ds);
+                    const dayLabel = d.getDate();
+                    grid += `<div style="width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;background:${checked ? h.color : '#f0f0f0'};color:${checked ? '#fff' : '#999'}" onclick="toggleHabitCheckin('${h.id}','${ds}',${checked})" title="${ds}">${dayLabel}</div>`;
+                }
+
+                const streak = calcStreak(checkedDates);
+                html += `
+                <div class="add-section" style="margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <div>
+                            <span style="font-size:16px;font-weight:600">${escapeHtml(h.name)}</span>
+                            <span style="font-size:12px;color:#888;margin-left:8px">${h.frequency === 'daily' ? '每天' : '每周'}</span>
+                            ${h.description ? `<div style="font-size:12px;color:#999;margin-top:2px">${escapeHtml(h.description)}</div>` : ''}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <span style="font-size:14px;font-weight:600;color:${h.color}">🔥 ${streak}天</span>
+                            <button style="padding:4px 8px;border:1px solid #e74c3c;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#e74c3c" onclick="deleteHabit('${h.id}')">删除</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:2px;flex-wrap:wrap">${grid}</div>
+                    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#aaa">
+                        <span>30天前</span><span>今天</span>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function calcStreak(checkedDates) {
+            let streak = 0;
+            const d = new Date();
+            while (true) {
+                const ds = d.toISOString().split('T')[0];
+                if (checkedDates.has(ds)) { streak++; d.setDate(d.getDate() - 1); }
+                else break;
+            }
+            return streak;
+        }
+
+        async function addHabit() {
+            const name = document.getElementById('habitName').value.trim();
+            if (!name) { alert('请输入习惯名称'); return; }
+            await fetch(`${API}/habits`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+                name, description: document.getElementById('habitDesc').value.trim(),
+                frequency: document.getElementById('habitFreq').value,
+                target_count: parseInt(document.getElementById('habitTarget').value) || 1,
+                color: document.getElementById('habitColor').value,
+            })});
+            document.getElementById('habitName').value = '';
+            document.getElementById('habitDesc').value = '';
+            loadHabitsPage();
+        }
+
+        async function toggleHabitCheckin(habitId, dateStr, isChecked) {
+            if (isChecked) {
+                await fetch(`${API}/habits/${habitId}/uncheckin`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({date:dateStr}) });
+            } else {
+                await fetch(`${API}/habits/${habitId}/checkin`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({date:dateStr}) });
+            }
+            loadHabitsPage();
+        }
+
+        async function deleteHabit(id) {
+            if (!confirm('确定删除此习惯及所有记录？')) return;
+            await fetch(`${API}/habits/${id}`, { method:'DELETE' });
+            loadHabitsPage();
+        }
+
+        // ---- Statistics ----
+        async function loadStatisticsPage() {
+            const res = await fetch(`${API}/stats/detailed`);
+            const stats = await res.json();
+
+            const rate = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
+            const hours = Math.round(stats.total_completed_minutes / 60 * 10) / 10;
+            document.getElementById('statsSummary').innerHTML = `
+                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">总活动</div></div>
+                <div class="dash-card done"><div class="number">${stats.completed}</div><div class="label">已完成</div></div>
+                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">完成率</div></div>
+                <div class="dash-card"><div class="number" style="color:#e67e22">${hours}h</div><div class="label">总投入时间</div></div>`;
+
+            // Category chart (simple bar)
+            const catData = stats.by_category || {};
+            const maxCat = Math.max(...Object.values(catData), 1);
+            let catHtml = '';
+            for (const [name, count] of Object.entries(catData)) {
+                const pct = Math.round(count / maxCat * 100);
+                catHtml += `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px"><span>${escapeHtml(name)}</span><span>${count}</span></div><div style="height:18px;background:#f0f0f0;border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#3498db;border-radius:4px"></div></div></div>`;
+            }
+            document.getElementById('catChart').innerHTML = catHtml || '<div class="empty-msg">暂无数据</div>';
+
+            // Weekly trend (simple bars)
+            const weeks = stats.weekly_trend || [];
+            const maxW = Math.max(...weeks.map(w => Math.max(w.created, w.completed)), 1);
+            let weekHtml = '';
+            for (const w of weeks) {
+                const wDate = new Date(w.week);
+                const label = `${wDate.getMonth()+1}/${wDate.getDate()}`;
+                weekHtml += `<div style="margin-bottom:10px"><div style="font-size:12px;color:#888;margin-bottom:4px">${label} 周</div><div style="display:flex;gap:4px;align-items:center"><div style="height:14px;background:#3498db;border-radius:3px;width:${Math.round(w.created/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">新增 ${w.created}</span></div><div style="display:flex;gap:4px;align-items:center;margin-top:2px"><div style="height:14px;background:#27ae60;border-radius:3px;width:${Math.round(w.completed/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">完成 ${w.completed}</span></div></div>`;
+            }
+            document.getElementById('weeklyChart').innerHTML = weekHtml || '<div class="empty-msg">暂无数据</div>';
+        }
+
+        function exportJSON() { window.location.href = `${API}/export/json`; }
+        function exportCSV() { window.location.href = `${API}/export/csv`; }
+
+        // ---- Settings ----
+        async function loadSettingsPage() {
+            const res = await fetch(`${API}/auth/me`);
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('settingName').value = data.user.display_name || '';
+                document.getElementById('settingEmail').value = data.user.email || '';
+            }
+        }
+
+        async function saveProfile() {
+            const res = await fetch(`${API}/auth/profile`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+                display_name: document.getElementById('settingName').value.trim(),
+                email: document.getElementById('settingEmail').value.trim(),
+            })});
+            const data = await res.json();
+            document.getElementById('profileMsg').textContent = data.message || data.error;
+            document.getElementById('profileMsg').style.color = res.ok ? '#27ae60' : '#e74c3c';
+            if (res.ok) loadUser();
+        }
+
+        async function changePassword() {
+            const res = await fetch(`${API}/auth/password`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+                old_password: document.getElementById('oldPassword').value,
+                new_password: document.getElementById('newPassword').value,
+            })});
+            const data = await res.json();
+            const el = document.getElementById('pwMsg');
+            el.textContent = data.message || data.error;
+            el.style.color = res.ok ? '#27ae60' : '#e74c3c';
+            if (res.ok) { document.getElementById('oldPassword').value=''; document.getElementById('newPassword').value=''; }
         }
 
         // Init

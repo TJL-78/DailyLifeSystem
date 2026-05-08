@@ -8,7 +8,7 @@ from datetime import datetime, date, time
 import pymysql
 import pymysql.cursors
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
 from .user_model import User
 
 
@@ -108,6 +108,32 @@ class Database:
                         INDEX idx_user (user_id),
                         INDEX idx_user_status (user_id, status),
                         INDEX idx_user_date (user_id, scheduled_date)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS habits (
+                        id VARCHAR(36) PRIMARY KEY,
+                        user_id VARCHAR(36) NOT NULL,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT,
+                        frequency VARCHAR(20) DEFAULT 'daily',
+                        target_count INT DEFAULT 1,
+                        color VARCHAR(7) DEFAULT '#27ae60',
+                        is_active BOOLEAN DEFAULT TRUE,
+                        created_at DATETIME NOT NULL,
+                        INDEX idx_user (user_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS habit_records (
+                        id VARCHAR(36) PRIMARY KEY,
+                        habit_id VARCHAR(36) NOT NULL,
+                        record_date DATE NOT NULL,
+                        count INT DEFAULT 1,
+                        note TEXT,
+                        created_at DATETIME NOT NULL,
+                        UNIQUE KEY uq_habit_date (habit_id, record_date),
+                        INDEX idx_habit (habit_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 """)
             conn.commit()
@@ -358,3 +384,127 @@ class MySQLActivityStorage:
         a.updated_at = row["updated_at"]
         a.completed_at = row.get("completed_at")
         return a
+
+
+class MySQLHabitStorage:
+    """MySQL habit storage."""
+
+    def __init__(self, db: Database):
+        self.db = db
+
+    def save(self, habit: Habit):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO habits (id, user_id, name, description, frequency, target_count, color, is_active, created_at)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    ON DUPLICATE KEY UPDATE
+                        name=VALUES(name), description=VALUES(description), frequency=VALUES(frequency),
+                        target_count=VALUES(target_count), color=VALUES(color), is_active=VALUES(is_active)
+                """, (habit.id, habit.user_id, habit.name, habit.description, habit.frequency,
+                      habit.target_count, habit.color, habit.is_active, habit.created_at))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_by_user(self, user_id: str) -> List[Habit]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM habits WHERE user_id = %s ORDER BY created_at", (user_id,))
+                return [self._row(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get(self, habit_id: str) -> Optional[Habit]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM habits WHERE id = %s", (habit_id,))
+                row = cursor.fetchone()
+                return self._row(row) if row else None
+        finally:
+            conn.close()
+
+    def delete(self, habit_id: str) -> bool:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM habit_records WHERE habit_id = %s", (habit_id,))
+                cursor.execute("DELETE FROM habits WHERE id = %s", (habit_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            conn.close()
+
+    def _row(self, r):
+        h = Habit(name=r["name"], user_id=r["user_id"], description=r.get("description") or "",
+                  frequency=r.get("frequency", "daily"), target_count=r.get("target_count", 1),
+                  color=r.get("color", "#27ae60"), is_active=bool(r.get("is_active", True)))
+        h.id = r["id"]
+        h.created_at = r["created_at"]
+        return h
+
+
+class MySQLHabitRecordStorage:
+    """MySQL habit record storage."""
+
+    def __init__(self, db: Database):
+        self.db = db
+
+    def save(self, record: HabitRecord):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO habit_records (id, habit_id, record_date, count, note, created_at)
+                    VALUES (%s,%s,%s,%s,%s,%s)
+                    ON DUPLICATE KEY UPDATE count=VALUES(count), note=VALUES(note)
+                """, (record.id, record.habit_id, record.record_date, record.count, record.note, record.created_at))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_by_habit(self, habit_id: str, start_date: date = None, end_date: date = None) -> List[HabitRecord]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                sql = "SELECT * FROM habit_records WHERE habit_id = %s"
+                params = [habit_id]
+                if start_date:
+                    sql += " AND record_date >= %s"
+                    params.append(start_date)
+                if end_date:
+                    sql += " AND record_date <= %s"
+                    params.append(end_date)
+                sql += " ORDER BY record_date"
+                cursor.execute(sql, params)
+                return [self._row(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def delete_by_habit(self, habit_id: str):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM habit_records WHERE habit_id = %s", (habit_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def delete_record(self, habit_id: str, record_date: date) -> bool:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM habit_records WHERE habit_id = %s AND record_date = %s", (habit_id, record_date))
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            conn.close()
+
+    def _row(self, r):
+        rec = HabitRecord(habit_id=r["habit_id"], record_date=r["record_date"], count=r.get("count", 1), note=r.get("note") or "")
+        rec.id = r["id"]
+        rec.created_at = r["created_at"]
+        return rec

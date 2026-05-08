@@ -3,3 +3,5 @@ __pycache__/
 activities.json
 users.json
 categories.json
+habits.json
+habit_records.json

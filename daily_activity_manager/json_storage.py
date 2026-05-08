@@ -4,7 +4,7 @@ import json
 import os
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
 
 
 class JSONCategoryStorage:
@@ -168,3 +168,120 @@ class JSONActivityStorage:
         if data.get("recurrence_end_date"):
             a.recurrence_end_date = date.fromisoformat(data["recurrence_end_date"])
         return a
+
+
+class JSONHabitStorage:
+    """JSON storage for habits."""
+
+    def __init__(self, filepath: str = "habits.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self):
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, habit: Habit):
+        habits = self._read_all()
+        d = habit.to_dict()
+        d["is_active"] = habit.is_active
+        for i, h in enumerate(habits):
+            if h["id"] == habit.id:
+                habits[i] = d
+                self._write_all(habits)
+                return
+        habits.append(d)
+        self._write_all(habits)
+
+    def get_by_user(self, user_id: str) -> List[Habit]:
+        result = []
+        for h in self._read_all():
+            if h.get("user_id") == user_id:
+                habit = Habit(name=h["name"], user_id=h["user_id"], description=h.get("description", ""),
+                              frequency=h.get("frequency", "daily"), target_count=h.get("target_count", 1),
+                              color=h.get("color", "#27ae60"), is_active=h.get("is_active", True))
+                habit.id = h["id"]
+                habit.created_at = datetime.fromisoformat(h["created_at"]) if h.get("created_at") else datetime.now()
+                result.append(habit)
+        return result
+
+    def get(self, habit_id: str) -> Optional[Habit]:
+        for h in self._read_all():
+            if h["id"] == habit_id:
+                habit = Habit(name=h["name"], user_id=h["user_id"], description=h.get("description", ""),
+                              frequency=h.get("frequency", "daily"), target_count=h.get("target_count", 1),
+                              color=h.get("color", "#27ae60"), is_active=h.get("is_active", True))
+                habit.id = h["id"]
+                habit.created_at = datetime.fromisoformat(h["created_at"]) if h.get("created_at") else datetime.now()
+                return habit
+        return None
+
+    def delete(self, habit_id: str) -> bool:
+        habits = self._read_all()
+        filtered = [h for h in habits if h["id"] != habit_id]
+        if len(filtered) == len(habits):
+            return False
+        self._write_all(filtered)
+        return True
+
+
+class JSONHabitRecordStorage:
+    """JSON storage for habit records."""
+
+    def __init__(self, filepath: str = "habit_records.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self):
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, record: HabitRecord):
+        records = self._read_all()
+        d = record.to_dict()
+        # Upsert by habit_id + record_date
+        for i, r in enumerate(records):
+            if r["habit_id"] == record.habit_id and r["record_date"] == record.record_date.isoformat():
+                records[i] = d
+                self._write_all(records)
+                return
+        records.append(d)
+        self._write_all(records)
+
+    def get_by_habit(self, habit_id: str, start_date: date = None, end_date: date = None) -> List[HabitRecord]:
+        result = []
+        for r in self._read_all():
+            if r["habit_id"] != habit_id:
+                continue
+            rd = date.fromisoformat(r["record_date"])
+            if start_date and rd < start_date:
+                continue
+            if end_date and rd > end_date:
+                continue
+            rec = HabitRecord(habit_id=r["habit_id"], record_date=rd, count=r.get("count", 1), note=r.get("note", ""))
+            rec.id = r["id"]
+            rec.created_at = datetime.fromisoformat(r["created_at"]) if r.get("created_at") else datetime.now()
+            result.append(rec)
+        return result
+
+    def delete_by_habit(self, habit_id: str):
+        records = self._read_all()
+        self._write_all([r for r in records if r["habit_id"] != habit_id])
+
+    def delete_record(self, habit_id: str, record_date: date) -> bool:
+        records = self._read_all()
+        filtered = [r for r in records if not (r["habit_id"] == habit_id and r["record_date"] == record_date.isoformat())]
+        if len(filtered) == len(records):
+            return False
+        self._write_all(filtered)
+        return True

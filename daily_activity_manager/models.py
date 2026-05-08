@@ -111,3 +111,51 @@ class Activity:
             "updated_at": self.updated_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
+
+
+@dataclass
+class Habit:
+    """A habit to track."""
+    name: str
+    user_id: str
+    description: str = ""
+    frequency: str = "daily"  # daily or weekly
+    target_count: int = 1
+    color: str = "#27ae60"
+    is_active: bool = True
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "user_id": self.user_id,
+            "description": self.description,
+            "frequency": self.frequency,
+            "target_count": self.target_count,
+            "color": self.color,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class HabitRecord:
+    """A single check-in record for a habit."""
+    habit_id: str
+    record_date: date
+    count: int = 1
+    note: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "habit_id": self.habit_id,
+            "record_date": self.record_date.isoformat(),
+            "count": self.count,
+            "note": self.note,
+            "created_at": self.created_at.isoformat(),
+        }

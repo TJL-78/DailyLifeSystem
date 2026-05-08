@@ -1,11 +1,13 @@
 """Flask Web API for the Daily Activity Management System."""
 
 import os
-from datetime import date, time, datetime
+import csv
+import io
+from datetime import date, time, datetime, timedelta
 from functools import wraps
-from flask import Flask, jsonify, request, render_template, session, redirect, url_for
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
 from .user_model import User
 
 app = Flask(__name__)
@@ -15,17 +17,21 @@ app.secret_key = os.environ.get("SECRET_KEY", "daily-life-system-secret-key-chan
 _use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
 
 if _use_mysql:
-    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage
+    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage, MySQLHabitStorage, MySQLHabitRecordStorage
     _db = Database()
     user_storage = MySQLUserStorage(_db)
     category_storage = MySQLCategoryStorage(_db)
     activity_storage = MySQLActivityStorage(_db)
+    habit_storage = MySQLHabitStorage(_db)
+    habit_record_storage = MySQLHabitRecordStorage(_db)
 else:
     from .user_storage import JSONUserStorage
-    from .json_storage import JSONActivityStorage, JSONCategoryStorage
+    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage
     user_storage = JSONUserStorage("users.json")
     category_storage = JSONCategoryStorage("categories.json")
     activity_storage = JSONActivityStorage("activities.json")
+    habit_storage = JSONHabitStorage("habits.json")
+    habit_record_storage = JSONHabitRecordStorage("habit_records.json")
 
 
 def login_required(f):
@@ -388,6 +394,214 @@ def calendar_activities():
 @login_required
 def get_stats():
     return jsonify(activity_storage.get_stats(current_user_id()))
+
+
+# ---- Detailed Stats ----
+
+@app.route("/api/stats/detailed", methods=["GET"])
+@login_required
+def get_detailed_stats():
+    """Get detailed statistics for charts."""
+    uid = current_user_id()
+    all_acts = activity_storage.get_by_user(uid)
+    cats = category_storage.get_by_user(uid)
+    cat_map = {c.id: c.to_dict() for c in cats}
+
+    # By category
+    by_category = {}
+    for a in all_acts:
+        cname = cat_map.get(a.category_id, {}).get("name", "未分类") if a.category_id else "未分类"
+        by_category[cname] = by_category.get(cname, 0) + 1
+
+    # Weekly completion trend (last 4 weeks)
+    today = date.today()
+    weekly = []
+    for i in range(3, -1, -1):
+        week_start = today - timedelta(days=today.weekday() + 7 * i)
+        week_end = week_start + timedelta(days=6)
+        created = len([a for a in all_acts if a.created_at.date() >= week_start and a.created_at.date() <= week_end])
+        completed = len([a for a in all_acts if a.completed_at and a.completed_at.date() >= week_start and a.completed_at.date() <= week_end])
+        weekly.append({"week": week_start.isoformat(), "created": created, "completed": completed})
+
+    # Total time
+    total_minutes = sum(a.duration_minutes or 0 for a in all_acts if a.status == ActivityStatus.COMPLETED)
+
+    return jsonify({
+        "by_category": by_category,
+        "weekly_trend": weekly,
+        "total_completed_minutes": total_minutes,
+        "total": len(all_acts),
+        "completed": len([a for a in all_acts if a.status == ActivityStatus.COMPLETED]),
+        "pending": len([a for a in all_acts if a.status == ActivityStatus.PENDING]),
+    })
+
+
+# ---- Habit Routes ----
+
+@app.route("/api/habits", methods=["GET"])
+@login_required
+def list_habits():
+    habits = habit_storage.get_by_user(current_user_id())
+    return jsonify([h.to_dict() for h in habits])
+
+
+@app.route("/api/habits", methods=["POST"])
+@login_required
+def create_habit():
+    data = request.get_json()
+    if not data or not data.get("name"):
+        return jsonify({"error": "name required"}), 400
+    habit = Habit(
+        name=data["name"],
+        user_id=current_user_id(),
+        description=data.get("description", ""),
+        frequency=data.get("frequency", "daily"),
+        target_count=data.get("target_count", 1),
+        color=data.get("color", "#27ae60"),
+    )
+    habit_storage.save(habit)
+    return jsonify(habit.to_dict()), 201
+
+
+@app.route("/api/habits/<habit_id>", methods=["PUT"])
+@login_required
+def update_habit(habit_id):
+    habit = habit_storage.get(habit_id)
+    if not habit or habit.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json()
+    if "name" in data: habit.name = data["name"]
+    if "description" in data: habit.description = data["description"]
+    if "frequency" in data: habit.frequency = data["frequency"]
+    if "target_count" in data: habit.target_count = data["target_count"]
+    if "color" in data: habit.color = data["color"]
+    if "is_active" in data: habit.is_active = data["is_active"]
+    habit_storage.save(habit)
+    return jsonify(habit.to_dict())
+
+
+@app.route("/api/habits/<habit_id>", methods=["DELETE"])
+@login_required
+def delete_habit(habit_id):
+    habit = habit_storage.get(habit_id)
+    if not habit or habit.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    habit_record_storage.delete_by_habit(habit_id)
+    habit_storage.delete(habit_id)
+    return jsonify({"message": "deleted"})
+
+
+@app.route("/api/habits/<habit_id>/checkin", methods=["POST"])
+@login_required
+def checkin_habit(habit_id):
+    habit = habit_storage.get(habit_id)
+    if not habit or habit.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json() or {}
+    record_date = date.fromisoformat(data["date"]) if data.get("date") else date.today()
+    record = HabitRecord(habit_id=habit_id, record_date=record_date, count=data.get("count", 1), note=data.get("note", ""))
+    habit_record_storage.save(record)
+    return jsonify(record.to_dict()), 201
+
+
+@app.route("/api/habits/<habit_id>/uncheckin", methods=["POST"])
+@login_required
+def uncheckin_habit(habit_id):
+    habit = habit_storage.get(habit_id)
+    if not habit or habit.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json() or {}
+    record_date = date.fromisoformat(data["date"]) if data.get("date") else date.today()
+    habit_record_storage.delete_record(habit_id, record_date)
+    return jsonify({"message": "unchecked"})
+
+
+@app.route("/api/habits/<habit_id>/records", methods=["GET"])
+@login_required
+def habit_records(habit_id):
+    habit = habit_storage.get(habit_id)
+    if not habit or habit.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    start = request.args.get("start")
+    end = request.args.get("end")
+    start_date = date.fromisoformat(start) if start else None
+    end_date = date.fromisoformat(end) if end else None
+    records = habit_record_storage.get_by_habit(habit_id, start_date, end_date)
+    return jsonify([r.to_dict() for r in records])
+
+
+# ---- Export ----
+
+@app.route("/api/export/json", methods=["GET"])
+@login_required
+def export_json():
+    uid = current_user_id()
+    activities = [a.to_dict() for a in activity_storage.get_by_user(uid)]
+    cats = [c.to_dict() for c in category_storage.get_by_user(uid)]
+    habits = [h.to_dict() for h in habit_storage.get_by_user(uid)]
+    import json
+    data = json.dumps({"activities": activities, "categories": cats, "habits": habits}, ensure_ascii=False, indent=2)
+    return Response(data, mimetype='application/json', headers={'Content-Disposition': 'attachment; filename=daily_life_export.json'})
+
+
+@app.route("/api/export/csv", methods=["GET"])
+@login_required
+def export_csv():
+    uid = current_user_id()
+    activities = activity_storage.get_by_user(uid)
+    cats = {c.id: c.name for c in category_storage.get_by_user(uid)}
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["标题", "描述", "状态", "优先级", "分类", "计划日期", "计划时间", "时长(分)", "标签", "创建时间", "完成时间"])
+    for a in activities:
+        writer.writerow([
+            a.title, a.description, a.status.value, a.priority.value,
+            cats.get(a.category_id, ""), a.scheduled_date or "", a.scheduled_time or "",
+            a.duration_minutes or "", ",".join(a.tags), a.created_at.isoformat(),
+            a.completed_at.isoformat() if a.completed_at else "",
+        ])
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv; charset=utf-8-sig',
+                    headers={'Content-Disposition': 'attachment; filename=activities.csv'})
+
+
+# ---- User Settings ----
+
+@app.route("/api/auth/profile", methods=["PUT"])
+@login_required
+def update_profile():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+    user = user_storage.get_by_id(current_user_id())
+    if not user:
+        return jsonify({"error": "not found"}), 404
+    if "display_name" in data:
+        user.display_name = data["display_name"]
+    if "email" in data:
+        user.email = data["email"]
+    user_storage.save(user)
+    return jsonify({"message": "更新成功", "user": user.to_dict()})
+
+
+@app.route("/api/auth/password", methods=["PUT"])
+@login_required
+def change_password():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+    old_pw = data.get("old_password", "")
+    new_pw = data.get("new_password", "")
+    if not old_pw or not new_pw:
+        return jsonify({"error": "请填写旧密码和新密码"}), 400
+    if len(new_pw) < 6:
+        return jsonify({"error": "新密码至少6个字符"}), 400
+    user = user_storage.get_by_id(current_user_id())
+    if not User.verify_password(old_pw, user.password_hash):
+        return jsonify({"error": "旧密码错误"}), 401
+    user.password_hash = User.hash_password(new_pw)
+    user_storage.save(user)
+    return jsonify({"message": "密码修改成功"})
 
 
 # ---- Page Routes ----
