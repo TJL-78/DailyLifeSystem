@@ -66,6 +66,8 @@ class MySQLUserStorage:
                         password_hash VARCHAR(255) NOT NULL,
                         email VARCHAR(255),
                         display_name VARCHAR(255),
+                        avatar_url VARCHAR(500),
+                        phone VARCHAR(50),
                         created_at DATETIME NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                 """)
@@ -79,13 +81,14 @@ class MySQLUserStorage:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO users (id, username, password_hash, email, display_name, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO users (id, username, password_hash, email, display_name, avatar_url, phone, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
                         password_hash=VALUES(password_hash), email=VALUES(email),
-                        display_name=VALUES(display_name)
+                        display_name=VALUES(display_name), avatar_url=VALUES(avatar_url),
+                        phone=VALUES(phone)
                     """,
-                    (user.id, user.username, user.password_hash, user.email, user.display_name, user.created_at),
+                    (user.id, user.username, user.password_hash, user.email, user.display_name, user.avatar_url, user.phone, user.created_at),
                 )
             conn.commit()
         finally:

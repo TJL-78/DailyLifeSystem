@@ -120,103 +120,106 @@
 <body>
     <div class="app">
         <div class="sidebar">
-            <h2>活动管理</h2>
-            <div class="nav-item active" data-page="dashboard">📊 仪表盘</div>
-            <div class="nav-item" data-page="activities">📋 全部活动</div>
-            <div class="nav-item" data-page="calendar">📅 日历视图</div>
-            <div class="nav-item" data-page="habits">🎯 习惯追踪</div>
-            <div class="nav-item" data-page="statistics">📈 统计分析</div>
-            <div class="nav-section">分类</div>
+            <h2 data-i18n="appTitle"></h2>
+            <div class="nav-item active" data-page="dashboard" data-i18n="dashboard"></div>
+            <div class="nav-item" data-page="activities" data-i18n="allActivities"></div>
+            <div class="nav-item" data-page="calendar" data-i18n="calendarView"></div>
+            <div class="nav-item" data-page="habits" data-i18n="habitTrack"></div>
+            <div class="nav-item" data-page="statistics" data-i18n="statistics"></div>
+            <div class="nav-section" data-i18n="categoryLabel"></div>
             <div id="sidebarCategories"></div>
-            <div class="nav-item" data-page="categories">⚙️ 管理分类</div>
-            <div class="nav-item" data-page="settings">👤 个人设置</div>
+            <div class="nav-item" data-page="categories" data-i18n="manageCategories"></div>
+            <div class="nav-item" data-page="settings" data-i18n="settingsNav"></div>
             <div class="user-section">
-                <div class="username" id="sidebarUser"></div>
-                <button class="btn-logout" onclick="doLogout()">退出登录</button>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div id="sidebarAvatar" style="width:28px;height:28px;border-radius:50%;background:#34495e;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;color:#bbb;flex-shrink:0">👤</div>
+                    <div class="username" id="sidebarUser"></div>
+                </div>
+                <button class="btn-logout" onclick="doLogout()" data-i18n="logout"></button>
             </div>
         </div>
 
         <div class="main">
             <!-- Dashboard -->
             <div class="page active" id="pageDashboard">
-                <h2 class="section-title">仪表盘</h2>
+                <h2 class="section-title" data-i18n="dashTitle"></h2>
                 <div class="dashboard-stats" id="dashStats"></div>
-                <h3 class="section-title">今日待办</h3>
+                <h3 class="section-title" data-i18n="todayTodo"></h3>
                 <ul class="activity-list" id="todayList"></ul>
-                <h3 class="section-title" style="margin-top:20px">近期活动</h3>
+                <h3 class="section-title" style="margin-top:20px" data-i18n="recentActs"></h3>
                 <ul class="activity-list" id="recentList"></ul>
             </div>
 
             <!-- Activities -->
             <div class="page" id="pageActivities">
-                <h2 class="section-title">全部活动</h2>
+                <h2 class="section-title" data-i18n="actTitle"></h2>
                 <!-- Search -->
                 <div class="search-bar">
-                    <input type="text" id="searchInput" placeholder="搜索活动（标题、描述、标签）..." onkeypress="if(event.key==='Enter')doSearch()">
-                    <button onclick="doSearch()">搜索</button>
-                    <button onclick="clearSearch()" style="background:#95a5a6">清除</button>
+                    <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" onkeypress="if(event.key==='Enter')doSearch()">
+                    <button onclick="doSearch()" data-i18n="search"></button>
+                    <button onclick="clearSearch()" style="background:#95a5a6" data-i18n="clear"></button>
                 </div>
                 <!-- Add form -->
                 <div class="add-section">
-                    <h3>添加活动</h3>
+                    <h3 data-i18n="addActivity"></h3>
                     <div class="form-row">
-                        <input type="text" id="inputTitle" placeholder="活动标题 *">
+                        <input type="text" id="inputTitle" data-i18n-placeholder="titlePlaceholder">
                         <select id="inputPriority">
-                            <option value="low">低</option>
-                            <option value="medium" selected>中</option>
-                            <option value="high">高</option>
-                            <option value="urgent">紧急</option>
+                            <option value="low" data-i18n="low"></option>
+                            <option value="medium" selected data-i18n="medium"></option>
+                            <option value="high" data-i18n="high"></option>
+                            <option value="urgent" data-i18n="urgent"></option>
                         </select>
-                        <select id="inputCategory"><option value="">无分类</option></select>
+                        <select id="inputCategory"><option value="" data-i18n="noCategory"></option></select>
                     </div>
                     <div class="form-row">
-                        <textarea id="inputDesc" placeholder="描述（可选）"></textarea>
+                        <textarea id="inputDesc" data-i18n-placeholder="descPlaceholder"></textarea>
                     </div>
                     <div class="form-row">
                         <input type="date" id="inputDate">
                         <input type="time" id="inputTime">
-                        <input type="number" id="inputDuration" placeholder="时长(分)" style="width:90px" min="1">
+                        <input type="number" id="inputDuration" data-i18n-placeholder="durationPlaceholder" style="width:90px" min="1">
                         <select id="inputRecurrence">
-                            <option value="none">不重复</option>
-                            <option value="daily">每天</option>
-                            <option value="weekly">每周</option>
-                            <option value="monthly">每月</option>
+                            <option value="none" data-i18n="noRepeat"></option>
+                            <option value="daily" data-i18n="daily"></option>
+                            <option value="weekly" data-i18n="weekly"></option>
+                            <option value="monthly" data-i18n="monthly"></option>
                         </select>
                     </div>
                     <div class="form-row">
-                        <input type="text" id="inputTags" placeholder="标签（逗号分隔，如：重要,会议）" style="flex:2">
+                        <input type="text" id="inputTags" data-i18n-placeholder="tagsPlaceholder" style="flex:2">
                     </div>
-                    <button class="btn-success" onclick="addActivity()">添加</button>
+                    <button class="btn-success" onclick="addActivity()" data-i18n="add"></button>
                 </div>
                 <!-- Filters -->
                 <div class="filter-bar">
                     <select id="filterStatus" onchange="loadActivities()">
-                        <option value="">全部状态</option>
-                        <option value="pending">待办</option>
-                        <option value="in_progress">进行中</option>
-                        <option value="completed">已完成</option>
+                        <option value="" data-i18n="allStatus"></option>
+                        <option value="pending" data-i18n="pending"></option>
+                        <option value="in_progress" data-i18n="inProgress"></option>
+                        <option value="completed" data-i18n="completed"></option>
                         <option value="cancelled">已取消</option>
                     </select>
                     <select id="filterPriority" onchange="loadActivities()">
-                        <option value="">全部优先级</option>
-                        <option value="low">低</option>
-                        <option value="medium">中</option>
-                        <option value="high">高</option>
-                        <option value="urgent">紧急</option>
+                        <option value="" data-i18n="allPriority"></option>
+                        <option value="low" data-i18n="low"></option>
+                        <option value="medium" data-i18n="medium"></option>
+                        <option value="high" data-i18n="high"></option>
+                        <option value="urgent" data-i18n="urgent"></option>
                     </select>
-                    <select id="filterCategory" onchange="loadActivities()"><option value="">全部分类</option></select>
+                    <select id="filterCategory" onchange="loadActivities()"><option value="" data-i18n="allCategory"></option></select>
                 </div>
                 <ul class="activity-list" id="activityList"></ul>
             </div>
 
             <!-- Calendar -->
             <div class="page" id="pageCalendar">
-                <h2 class="section-title">日历视图</h2>
+                <h2 class="section-title" data-i18n="calTitle"></h2>
                 <div class="calendar">
                     <div class="cal-header">
-                        <button onclick="calPrev()">◀ 上月</button>
+                        <button onclick="calPrev()" data-i18n="prevMonth"></button>
                         <h3 id="calTitle"></h3>
-                        <button onclick="calNext()">下月 ▶</button>
+                        <button onclick="calNext()" data-i18n="nextMonth"></button>
                     </div>
                     <div class="cal-grid" id="calGrid"></div>
                 </div>
@@ -228,13 +231,13 @@
 
             <!-- Categories -->
             <div class="page" id="pageCategories">
-                <h2 class="section-title">分类管理</h2>
+                <h2 class="section-title" data-i18n="catManage"></h2>
                 <div class="add-section">
                     <div class="form-row">
-                        <input type="text" id="catName" placeholder="分类名称 *">
+                        <input type="text" id="catName" data-i18n-placeholder="catNamePlaceholder">
                         <input type="color" id="catColor" value="#3498db" style="width:50px;height:34px;padding:2px">
-                        <input type="text" id="catIcon" placeholder="图标(emoji)" style="width:80px">
-                        <button class="btn-success" onclick="addCategory()">添加</button>
+                        <input type="text" id="catIcon" data-i18n-placeholder="iconPlaceholder" style="width:80px">
+                        <button class="btn-success" onclick="addCategory()" data-i18n="add"></button>
                     </div>
                 </div>
                 <ul class="cat-list" id="catList"></ul>
@@ -242,19 +245,19 @@
 
             <!-- Habits -->
             <div class="page" id="pageHabits">
-                <h2 class="section-title">习惯追踪</h2>
+                <h2 class="section-title" data-i18n="habitsTitle"></h2>
                 <div class="add-section">
-                    <h3>添加习惯</h3>
+                    <h3 data-i18n="addHabit"></h3>
                     <div class="form-row">
-                        <input type="text" id="habitName" placeholder="习惯名称 *">
-                        <input type="text" id="habitDesc" placeholder="描述（可选）" style="flex:1">
+                        <input type="text" id="habitName" data-i18n-placeholder="habitNamePlaceholder">
+                        <input type="text" id="habitDesc" data-i18n-placeholder="habitDescPlaceholder" style="flex:1">
                         <select id="habitFreq">
-                            <option value="daily">每天</option>
-                            <option value="weekly">每周</option>
+                            <option value="daily" data-i18n="daily"></option>
+                            <option value="weekly" data-i18n="weekly"></option>
                         </select>
                         <input type="number" id="habitTarget" value="1" min="1" style="width:70px" title="目标次数">
                         <input type="color" id="habitColor" value="#27ae60" style="width:50px;height:34px;padding:2px">
-                        <button class="btn-success" onclick="addHabit()">添加</button>
+                        <button class="btn-success" onclick="addHabit()" data-i18n="add"></button>
                     </div>
                 </div>
                 <div id="habitList"></div>
@@ -262,42 +265,77 @@
 
             <!-- Statistics -->
             <div class="page" id="pageStatistics">
-                <h2 class="section-title">统计分析</h2>
+                <h2 class="section-title" data-i18n="statsTitle"></h2>
                 <div class="dashboard-stats" id="statsSummary"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
                     <div class="add-section">
-                        <h3>分类分布</h3>
+                        <h3 data-i18n="catDistribution"></h3>
                         <div id="catChart"></div>
                     </div>
                     <div class="add-section">
-                        <h3>每周趋势（近4周）</h3>
+                        <h3 data-i18n="weeklyTrend"></h3>
                         <div id="weeklyChart"></div>
                     </div>
                 </div>
                 <div style="margin-top:16px">
-                    <button class="btn-primary" onclick="exportJSON()">导出 JSON</button>
-                    <button class="btn-primary" onclick="exportCSV()" style="margin-left:8px">导出 CSV</button>
+                    <button class="btn-primary" onclick="exportJSON()" data-i18n="exportJSON"></button>
+                    <button class="btn-primary" onclick="exportCSV()" style="margin-left:8px" data-i18n="exportCSV"></button>
                 </div>
             </div>
 
             <!-- Settings -->
             <div class="page" id="pageSettings">
-                <h2 class="section-title">个人设置</h2>
-                <div class="add-section">
-                    <h3>个人资料</h3>
+                <h2 class="section-title" data-i18n="settings"></h2>
+
+                <!-- Language Switch -->
+                <div class="add-section" style="margin-bottom:16px">
+                    <h3 data-i18n="langSwitch"></h3>
                     <div class="form-row">
-                        <input type="text" id="settingName" placeholder="显示名称">
-                        <input type="email" id="settingEmail" placeholder="邮箱">
-                        <button class="btn-primary" onclick="saveProfile()">保存</button>
+                        <select id="langSelect" onchange="switchLang(this.value)" style="padding:8px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:14px">
+                            <option value="zh">中文</option>
+                            <option value="en">English</option>
+                        </select>
                     </div>
+                </div>
+
+                <!-- Avatar -->
+                <div class="add-section" style="margin-bottom:16px">
+                    <h3 data-i18n="avatar"></h3>
+                    <div style="display:flex;align-items:center;gap:20px">
+                        <div id="avatarPreview" style="width:80px;height:80px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:32px;color:#999;overflow:hidden">
+                            <span id="avatarPlaceholder">👤</span>
+                            <img id="avatarImg" style="width:100%;height:100%;object-fit:cover;display:none">
+                        </div>
+                        <div>
+                            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                            <button class="btn-primary" onclick="document.getElementById('avatarFile').click()" data-i18n="chooseAvatar"></button>
+                            <button class="btn-success" onclick="uploadAvatar()" style="margin-left:8px" data-i18n="uploadAvatar"></button>
+                            <div style="font-size:12px;color:#999;margin-top:6px" data-i18n="avatarHint"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div class="add-section">
+                    <h3 data-i18n="profile"></h3>
+                    <div class="form-row">
+                        <input type="text" id="settingName" data-i18n-placeholder="displayName">
+                        <input type="email" id="settingEmail" data-i18n-placeholder="emailPlaceholder">
+                    </div>
+                    <div class="form-row">
+                        <input type="tel" id="settingPhone" data-i18n-placeholder="phonePlaceholder" style="flex:1">
+                    </div>
+                    <button class="btn-primary" onclick="saveProfile()" data-i18n="save"></button>
                     <div id="profileMsg" style="color:#27ae60;font-size:13px;margin-top:8px"></div>
                 </div>
+
+                <!-- Password -->
                 <div class="add-section" style="margin-top:16px">
-                    <h3>修改密码</h3>
+                    <h3 data-i18n="changePassword"></h3>
                     <div class="form-row">
-                        <input type="password" id="oldPassword" placeholder="旧密码">
-                        <input type="password" id="newPassword" placeholder="新密码（至少6位）">
-                        <button class="btn-primary" onclick="changePassword()">修改</button>
+                        <input type="password" id="oldPassword" data-i18n-placeholder="oldPw">
+                        <input type="password" id="newPassword" data-i18n-placeholder="newPw">
+                        <button class="btn-primary" onclick="changePassword()" data-i18n="changePwBtn"></button>
                     </div>
                     <div id="pwMsg" style="font-size:13px;margin-top:8px"></div>
                 </div>
@@ -311,6 +349,113 @@
         let calYear, calMonth;
         let calEvents = {};
         let isSearchMode = false;
+        let currentLang = localStorage.getItem('lang') || 'zh';
+
+        // ---- i18n ----
+        const I18N = {
+            zh: {
+                appTitle: '活动管理', dashboard: '📊 仪表盘', allActivities: '📋 全部活动',
+                calendarView: '📅 日历视图', habitTrack: '🎯 习惯追踪', statistics: '📈 统计分析',
+                categoryLabel: '分类', manageCategories: '⚙️ 管理分类', settingsNav: '👤 个人设置',
+                logout: '退出登录', settings: '个人设置', langSwitch: '语言切换',
+                avatar: '头像设置', chooseAvatar: '选择图片', uploadAvatar: '上传头像',
+                avatarHint: '支持 JPG/PNG 格式，不超过 2MB',
+                profile: '个人资料', displayName: '显示名称', emailPlaceholder: '邮箱',
+                phonePlaceholder: '手机号（如：13800138000）', save: '保存',
+                changePassword: '修改密码', oldPw: '旧密码', newPw: '新密码（至少6位）', changePwBtn: '修改',
+                dashTitle: '仪表盘', totalActs: '总活动', pending: '待办', inProgress: '进行中',
+                completed: '已完成', completionRate: '完成率', todayTodo: '今日待办',
+                recentActs: '近期活动', noTodayActs: '今日暂无安排', noActs: '暂无活动',
+                actTitle: '全部活动', searchPlaceholder: '搜索活动（标题、描述、标签）...',
+                search: '搜索', clear: '清除', addActivity: '添加活动',
+                titlePlaceholder: '活动标题 *', low: '低', medium: '中', high: '高', urgent: '紧急',
+                noCategory: '无分类', descPlaceholder: '描述（可选）', durationPlaceholder: '时长(分)',
+                noRepeat: '不重复', daily: '每天', weekly: '每周', monthly: '每月',
+                tagsPlaceholder: '标签（逗号分隔，如：重要,会议）', add: '添加',
+                allStatus: '全部状态', allPriority: '全部优先级', allCategory: '全部分类',
+                catManage: '分类管理', catNamePlaceholder: '分类名称 *', iconPlaceholder: '图标(emoji)',
+                noCats: '暂无分类', confirmDeleteCat: '确定删除此分类？',
+                habitsTitle: '习惯追踪', addHabit: '添加习惯', habitNamePlaceholder: '习惯名称 *',
+                habitDescPlaceholder: '描述（可选）', noHabits: '暂无习惯，添加一个开始追踪吧',
+                confirmDeleteHabit: '确定删除此习惯及所有记录？',
+                statsTitle: '统计分析', totalCompleted: '已完成', totalTime: '总投入时间',
+                catDistribution: '分类分布', weeklyTrend: '每周趋势（近4周）',
+                exportJSON: '导出 JSON', exportCSV: '导出 CSV', noData: '暂无数据',
+                newAdded: '新增', completedLabel: '完成', weekLabel: '周',
+                calTitle: '日历视图', prevMonth: '◀ 上月', nextMonth: '下月 ▶',
+                dayDetail: '的活动', noDayActs: '当天无活动', noMatch: '未找到匹配的活动',
+                start: '开始', cancel: '取消', delete: '删除', confirmDelete: '确定删除？',
+                subtask: '子任务', addSubtaskPlaceholder: '添加子任务...',
+                daysAgo30: '30天前', today: '今天',
+                profileUpdated: '更新成功', phoneInvalid: '手机号格式不正确',
+                pwChanged: '密码修改成功', avatarUpdated: '头像更新成功',
+                unclassified: '未分类',
+            },
+            en: {
+                appTitle: 'Activity Manager', dashboard: '📊 Dashboard', allActivities: '📋 All Activities',
+                calendarView: '📅 Calendar', habitTrack: '🎯 Habits', statistics: '📈 Statistics',
+                categoryLabel: 'Categories', manageCategories: '⚙️ Manage Categories', settingsNav: '👤 Settings',
+                logout: 'Logout', settings: 'Settings', langSwitch: 'Language',
+                avatar: 'Avatar', chooseAvatar: 'Choose Image', uploadAvatar: 'Upload',
+                avatarHint: 'JPG/PNG, max 2MB',
+                profile: 'Profile', displayName: 'Display Name', emailPlaceholder: 'Email',
+                phonePlaceholder: 'Phone number', save: 'Save',
+                changePassword: 'Change Password', oldPw: 'Old password', newPw: 'New password (min 6)', changePwBtn: 'Change',
+                dashTitle: 'Dashboard', totalActs: 'Total', pending: 'Pending', inProgress: 'In Progress',
+                completed: 'Completed', completionRate: 'Rate', todayTodo: "Today's Tasks",
+                recentActs: 'Recent Activities', noTodayActs: 'Nothing scheduled today', noActs: 'No activities',
+                actTitle: 'All Activities', searchPlaceholder: 'Search activities...',
+                search: 'Search', clear: 'Clear', addActivity: 'Add Activity',
+                titlePlaceholder: 'Title *', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent',
+                noCategory: 'No category', descPlaceholder: 'Description (optional)', durationPlaceholder: 'Duration(min)',
+                noRepeat: 'No repeat', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
+                tagsPlaceholder: 'Tags (comma separated)', add: 'Add',
+                allStatus: 'All status', allPriority: 'All priority', allCategory: 'All categories',
+                catManage: 'Category Management', catNamePlaceholder: 'Category name *', iconPlaceholder: 'Icon(emoji)',
+                noCats: 'No categories', confirmDeleteCat: 'Delete this category?',
+                habitsTitle: 'Habit Tracking', addHabit: 'Add Habit', habitNamePlaceholder: 'Habit name *',
+                habitDescPlaceholder: 'Description (optional)', noHabits: 'No habits yet, add one to start tracking',
+                confirmDeleteHabit: 'Delete this habit and all records?',
+                statsTitle: 'Statistics', totalCompleted: 'Completed', totalTime: 'Total Time',
+                catDistribution: 'Category Distribution', weeklyTrend: 'Weekly Trend (4 weeks)',
+                exportJSON: 'Export JSON', exportCSV: 'Export CSV', noData: 'No data',
+                newAdded: 'New', completedLabel: 'Done', weekLabel: 'week',
+                calTitle: 'Calendar', prevMonth: '◀ Prev', nextMonth: 'Next ▶',
+                dayDetail: ' activities', noDayActs: 'No activities this day', noMatch: 'No matching activities',
+                start: 'Start', cancel: 'Cancel', delete: 'Delete', confirmDelete: 'Confirm delete?',
+                subtask: 'Subtask', addSubtaskPlaceholder: 'Add subtask...',
+                daysAgo30: '30 days ago', today: 'Today',
+                profileUpdated: 'Updated', phoneInvalid: 'Invalid phone number',
+                pwChanged: 'Password changed', avatarUpdated: 'Avatar updated',
+                unclassified: 'Uncategorized',
+            }
+        };
+
+        function t(key) { return (I18N[currentLang] || I18N.zh)[key] || key; }
+
+        function applyI18n() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.textContent = t(el.dataset.i18n);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = t(el.dataset.i18nPlaceholder);
+            });
+            document.title = t('appTitle');
+            const langSel = document.getElementById('langSelect');
+            if (langSel) langSel.value = currentLang;
+        }
+
+        function switchLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            applyI18n();
+            // Reload dynamic content
+            const activePage = document.querySelector('.page.active');
+            if (activePage) {
+                const pageId = activePage.id.replace('page', '').toLowerCase();
+                showPage(pageId);
+            }
+        }
 
         // Navigation
         function showPage(page) {
@@ -344,6 +489,9 @@
             if (res.ok) {
                 const data = await res.json();
                 document.getElementById('sidebarUser').textContent = data.user.display_name || data.user.username;
+                if (data.user.avatar_url) {
+                    document.getElementById('sidebarAvatar').innerHTML = `<img src="${data.user.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
+                }
             }
         }
         async function doLogout() {
@@ -366,7 +514,7 @@
         async function loadCategoryPage() {
             await loadCategories();
             const list = document.getElementById('catList');
-            if (!categories.length) { list.innerHTML = '<div class="empty-msg">暂无分类</div>'; return; }
+            if (!categories.length) { list.innerHTML = `<div class="empty-msg">${t('noCats')}</div>`; return; }
             list.innerHTML = categories.map(c => `
                 <li class="cat-item">
                     <span class="cat-color" style="background:${c.color}"></span>
@@ -377,7 +525,7 @@
 
         async function addCategory() {
             const name = document.getElementById('catName').value.trim();
-            if (!name) { alert('请输入分类名称'); return; }
+            if (!name) { alert(t('catNamePlaceholder')); return; }
             await fetch(`${API}/categories`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, color:document.getElementById('catColor').value, icon:document.getElementById('catIcon').value.trim()}) });
             document.getElementById('catName').value = '';
             document.getElementById('catIcon').value = '';
@@ -386,7 +534,7 @@
         }
 
         async function deleteCategory(id) {
-            if (!confirm('确定删除此分类？')) return;
+            if (!confirm(t('confirmDeleteCat'))) return;
             await fetch(`${API}/categories/${id}`, { method:'DELETE' });
             await loadCategories();
             loadCategoryPage();
@@ -403,14 +551,14 @@
             const p = stats.by_status?.pending||0, ip = stats.by_status?.in_progress||0, c = stats.by_status?.completed||0;
             const rate = stats.total ? Math.round(c / stats.total * 100) : 0;
             document.getElementById('dashStats').innerHTML = `
-                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">总活动</div></div>
-                <div class="dash-card pending"><div class="number">${p}</div><div class="label">待办</div></div>
-                <div class="dash-card progress"><div class="number">${ip}</div><div class="label">进行中</div></div>
-                <div class="dash-card done"><div class="number">${c}</div><div class="label">已完成</div></div>
-                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">完成率</div></div>`;
-            document.getElementById('todayList').innerHTML = today.length ? today.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">今日暂无安排</div>';
+                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">${t('totalActs')}</div></div>
+                <div class="dash-card pending"><div class="number">${p}</div><div class="label">${t('pending')}</div></div>
+                <div class="dash-card progress"><div class="number">${ip}</div><div class="label">${t('inProgress')}</div></div>
+                <div class="dash-card done"><div class="number">${c}</div><div class="label">${t('completed')}</div></div>
+                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">${t('completionRate')}</div></div>`;
+            document.getElementById('todayList').innerHTML = today.length ? today.map(a => renderActivity(a, true)).join('') : `<div class="empty-msg">${t('noTodayActs')}</div>`;
             const recent = all.filter(a => a.status==='pending'||a.status==='in_progress').slice(0,10);
-            document.getElementById('recentList').innerHTML = recent.length ? recent.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">暂无活动</div>';
+            document.getElementById('recentList').innerHTML = recent.length ? recent.map(a => renderActivity(a, true)).join('') : `<div class="empty-msg">${t('noActs')}</div>`;
         }
 
         // Search
@@ -421,7 +569,7 @@
             const res = await fetch(`${API}/activities/search?q=${encodeURIComponent(q)}`);
             const results = await res.json();
             const list = document.getElementById('activityList');
-            list.innerHTML = results.length ? results.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">未找到匹配的活动</div>';
+            list.innerHTML = results.length ? results.map(a => renderActivity(a, true)).join('') : `<div class="empty-msg">${t('noMatch')}</div>`;
         }
         function clearSearch() {
             document.getElementById('searchInput').value = '';
@@ -441,7 +589,7 @@
             if (c) url += `category_id=${c}&`;
             const res = await fetch(url);
             const activities = await res.json();
-            document.getElementById('activityList').innerHTML = activities.length ? activities.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">暂无活动</div>';
+            document.getElementById('activityList').innerHTML = activities.length ? activities.map(a => renderActivity(a, true)).join('') : `<div class="empty-msg">${t('noActs')}</div>`;
             // Load subtasks for each top-level activity
             activities.filter(a => !a.parent_id).forEach(a => loadSubtasks(a.id));
         }
@@ -459,9 +607,9 @@
             if (a.parent_id) meta += `<span class="badge badge-sub">子任务</span>`;
 
             let actions = '';
-            if (a.status === 'pending') actions = `<button onclick="startAct('${a.id}')">开始</button>`;
-            if (a.status !== 'completed' && a.status !== 'cancelled') actions += `<button onclick="cancelAct('${a.id}')">取消</button>`;
-            actions += `<button class="btn-del" onclick="deleteAct('${a.id}')">删除</button>`;
+            if (a.status === 'pending') actions = `<button onclick="startAct('${a.id}')">${t('start')}</button>`;
+            if (a.status !== 'completed' && a.status !== 'cancelled') actions += `<button onclick="cancelAct('${a.id}')">${t('cancel')}</button>`;
+            actions += `<button class="btn-del" onclick="deleteAct('${a.id}')">${t('delete')}</button>`;
 
             let subtaskHtml = '';
             if (showSubtasks && !a.parent_id) {
@@ -519,7 +667,7 @@
 
         async function addActivity() {
             const title = document.getElementById('inputTitle').value.trim();
-            if (!title) { alert('请输入标题'); return; }
+            if (!title) { alert(t('titlePlaceholder')); return; }
             const tagsStr = document.getElementById('inputTags').value.trim();
             const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
             const body = {
@@ -550,7 +698,7 @@
         }
         async function startAct(id) { await fetch(`${API}/activities/${id}/start`, {method:'POST'}); loadActivities(); loadDashboard(); }
         async function cancelAct(id) { await fetch(`${API}/activities/${id}/cancel`, {method:'POST'}); loadActivities(); loadDashboard(); }
-        async function deleteAct(id) { if(!confirm('确定删除？'))return; await fetch(`${API}/activities/${id}`,{method:'DELETE'}); loadActivities(); loadDashboard(); }
+        async function deleteAct(id) { if(!confirm(t('confirmDelete')))return; await fetch(`${API}/activities/${id}`,{method:'DELETE'}); loadActivities(); loadDashboard(); }
 
         // Calendar
         function loadCalendar() {
@@ -628,10 +776,10 @@
         function showDayDetail(dateStr) {
             const events = calEvents[dateStr] || [];
             document.getElementById('calDetail').style.display = 'block';
-            document.getElementById('calDetailTitle').textContent = dateStr + ' 的活动';
+            document.getElementById('calDetailTitle').textContent = dateStr + ' ' + t('dayDetail');
             document.getElementById('calDetailList').innerHTML = events.length
                 ? events.map(a => renderActivity(a, false)).join('')
-                : '<div class="empty-msg">当天无活动</div>';
+                : `<div class="empty-msg">${t('noDayActs')}</div>`;
         }
 
         // ---- Habits ----
@@ -639,7 +787,7 @@
             const res = await fetch(`${API}/habits`);
             const habits = await res.json();
             const container = document.getElementById('habitList');
-            if (!habits.length) { container.innerHTML = '<div class="empty-msg">暂无习惯，添加一个开始追踪吧</div>'; return; }
+            if (!habits.length) { container.innerHTML = `<div class="empty-msg">${t('noHabits')}</div>`; return; }
 
             const today = new Date().toISOString().split('T')[0];
             let html = '';
@@ -668,7 +816,7 @@
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                         <div>
                             <span style="font-size:16px;font-weight:600">${escapeHtml(h.name)}</span>
-                            <span style="font-size:12px;color:#888;margin-left:8px">${h.frequency === 'daily' ? '每天' : '每周'}</span>
+                            <span style="font-size:12px;color:#888;margin-left:8px">${h.frequency === 'daily' ? t('daily') : t('weekly')}</span>
                             ${h.description ? `<div style="font-size:12px;color:#999;margin-top:2px">${escapeHtml(h.description)}</div>` : ''}
                         </div>
                         <div style="display:flex;align-items:center;gap:12px">
@@ -678,7 +826,7 @@
                     </div>
                     <div style="display:flex;gap:2px;flex-wrap:wrap">${grid}</div>
                     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#aaa">
-                        <span>30天前</span><span>今天</span>
+                        <span>${t('daysAgo30')}</span><span>${t('today')}</span>
                     </div>
                 </div>`;
             }
@@ -698,7 +846,7 @@
 
         async function addHabit() {
             const name = document.getElementById('habitName').value.trim();
-            if (!name) { alert('请输入习惯名称'); return; }
+            if (!name) { alert(t('habitNamePlaceholder')); return; }
             await fetch(`${API}/habits`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
                 name, description: document.getElementById('habitDesc').value.trim(),
                 frequency: document.getElementById('habitFreq').value,
@@ -720,7 +868,7 @@
         }
 
         async function deleteHabit(id) {
-            if (!confirm('确定删除此习惯及所有记录？')) return;
+            if (!confirm(t('confirmDeleteHabit'))) return;
             await fetch(`${API}/habits/${id}`, { method:'DELETE' });
             loadHabitsPage();
         }
@@ -733,10 +881,10 @@
             const rate = stats.total ? Math.round(stats.completed / stats.total * 100) : 0;
             const hours = Math.round(stats.total_completed_minutes / 60 * 10) / 10;
             document.getElementById('statsSummary').innerHTML = `
-                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">总活动</div></div>
-                <div class="dash-card done"><div class="number">${stats.completed}</div><div class="label">已完成</div></div>
-                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">完成率</div></div>
-                <div class="dash-card"><div class="number" style="color:#e67e22">${hours}h</div><div class="label">总投入时间</div></div>`;
+                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">${t('totalActs')}</div></div>
+                <div class="dash-card done"><div class="number">${stats.completed}</div><div class="label">${t('totalCompleted')}</div></div>
+                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">${t('completionRate')}</div></div>
+                <div class="dash-card"><div class="number" style="color:#e67e22">${hours}h</div><div class="label">${t('totalTime')}</div></div>`;
 
             // Category chart (simple bar)
             const catData = stats.by_category || {};
@@ -746,7 +894,7 @@
                 const pct = Math.round(count / maxCat * 100);
                 catHtml += `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px"><span>${escapeHtml(name)}</span><span>${count}</span></div><div style="height:18px;background:#f0f0f0;border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#3498db;border-radius:4px"></div></div></div>`;
             }
-            document.getElementById('catChart').innerHTML = catHtml || '<div class="empty-msg">暂无数据</div>';
+            document.getElementById('catChart').innerHTML = catHtml || `<div class="empty-msg">${t('noData')}</div>`;
 
             // Weekly trend (simple bars)
             const weeks = stats.weekly_trend || [];
@@ -755,9 +903,9 @@
             for (const w of weeks) {
                 const wDate = new Date(w.week);
                 const label = `${wDate.getMonth()+1}/${wDate.getDate()}`;
-                weekHtml += `<div style="margin-bottom:10px"><div style="font-size:12px;color:#888;margin-bottom:4px">${label} 周</div><div style="display:flex;gap:4px;align-items:center"><div style="height:14px;background:#3498db;border-radius:3px;width:${Math.round(w.created/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">新增 ${w.created}</span></div><div style="display:flex;gap:4px;align-items:center;margin-top:2px"><div style="height:14px;background:#27ae60;border-radius:3px;width:${Math.round(w.completed/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">完成 ${w.completed}</span></div></div>`;
+                weekHtml += `<div style="margin-bottom:10px"><div style="font-size:12px;color:#888;margin-bottom:4px">${label} ${t('weekLabel')}</div><div style="display:flex;gap:4px;align-items:center"><div style="height:14px;background:#3498db;border-radius:3px;width:${Math.round(w.created/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">${t('newAdded')} ${w.created}</span></div><div style="display:flex;gap:4px;align-items:center;margin-top:2px"><div style="height:14px;background:#27ae60;border-radius:3px;width:${Math.round(w.completed/maxW*100)}%;min-width:2px"></div><span style="font-size:11px">${t('completedLabel')} ${w.completed}</span></div></div>`;
             }
-            document.getElementById('weeklyChart').innerHTML = weekHtml || '<div class="empty-msg">暂无数据</div>';
+            document.getElementById('weeklyChart').innerHTML = weekHtml || `<div class="empty-msg">${t('noData')}</div>`;
         }
 
         function exportJSON() { window.location.href = `${API}/export/json`; }
@@ -770,6 +918,43 @@
                 const data = await res.json();
                 document.getElementById('settingName').value = data.user.display_name || '';
                 document.getElementById('settingEmail').value = data.user.email || '';
+                document.getElementById('settingPhone').value = data.user.phone || '';
+                if (data.user.avatar_url) {
+                    const img = document.getElementById('avatarImg');
+                    img.src = data.user.avatar_url;
+                    img.style.display = 'block';
+                    document.getElementById('avatarPlaceholder').style.display = 'none';
+                }
+            }
+        }
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('avatarImg');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('avatarPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadAvatar() {
+            const file = document.getElementById('avatarFile').files[0];
+            if (!file) { alert(t('chooseAvatar')); return; }
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const res = await fetch(`${API}/auth/avatar`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('profileMsg').textContent = t('avatarUpdated');
+                document.getElementById('profileMsg').style.color = '#27ae60';
+                loadUser();
+            } else {
+                document.getElementById('profileMsg').textContent = data.error;
+                document.getElementById('profileMsg').style.color = '#e74c3c';
             }
         }
 
@@ -777,6 +962,7 @@
             const res = await fetch(`${API}/auth/profile`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
                 display_name: document.getElementById('settingName').value.trim(),
                 email: document.getElementById('settingEmail').value.trim(),
+                phone: document.getElementById('settingPhone').value.trim(),
             })});
             const data = await res.json();
             document.getElementById('profileMsg').textContent = data.message || data.error;
@@ -798,6 +984,7 @@
 
         // Init
         async function init() {
+            applyI18n();
             await loadUser();
             await loadCategories();
             loadDashboard();

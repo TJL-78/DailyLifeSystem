@@ -15,6 +15,8 @@ class User:
     password_hash: str
     email: str = ""
     display_name: str = ""
+    avatar_url: str = ""
+    phone: str = ""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -38,6 +40,8 @@ class User:
             "username": self.username,
             "email": self.email,
             "display_name": self.display_name,
+            "avatar_url": self.avatar_url,
+            "phone": self.phone,
             "created_at": self.created_at.isoformat(),
         }
 
@@ -48,6 +52,8 @@ class User:
             password_hash=data["password_hash"],
             email=data.get("email", ""),
             display_name=data.get("display_name", ""),
+            avatar_url=data.get("avatar_url", ""),
+            phone=data.get("phone", ""),
         )
         user.id = data.get("id", user.id)
         if data.get("created_at"):

@@ -3,15 +3,21 @@
 import os
 import csv
 import io
+import re
+import base64
 from datetime import date, time, datetime, timedelta
 from functools import wraps
-from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response, send_from_directory
 
 from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
 from .user_model import User
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "daily-life-system-secret-key-change-me")
+
+# Avatar upload directory
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads', 'avatars')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Storage initialization
 _use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
@@ -580,8 +586,57 @@ def update_profile():
         user.display_name = data["display_name"]
     if "email" in data:
         user.email = data["email"]
+    if "phone" in data:
+        phone = data["phone"].strip()
+        if phone and not re.match(r'^\+?[\d\s\-]{6,20}$', phone):
+            return jsonify({"error": "手机号格式不正确"}), 400
+        user.phone = phone
     user_storage.save(user)
     return jsonify({"message": "更新成功", "user": user.to_dict()})
+
+
+@app.route("/api/auth/avatar", methods=["POST"])
+@login_required
+def upload_avatar():
+    """Upload avatar image (accepts multipart file or base64 JSON)."""
+    user = user_storage.get_by_id(current_user_id())
+    if not user:
+        return jsonify({"error": "not found"}), 404
+
+    filename = f"{user.id}.png"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
+    if request.content_type and 'multipart' in request.content_type:
+        file = request.files.get('avatar')
+        if not file:
+            return jsonify({"error": "请选择头像文件"}), 400
+        if file.content_length and file.content_length > 2 * 1024 * 1024:
+            return jsonify({"error": "头像文件不能超过2MB"}), 400
+        file.save(filepath)
+    else:
+        data = request.get_json()
+        if not data or not data.get("avatar_base64"):
+            return jsonify({"error": "请提供头像数据"}), 400
+        img_data = data["avatar_base64"]
+        if ',' in img_data:
+            img_data = img_data.split(',', 1)[1]
+        try:
+            raw = base64.b64decode(img_data)
+        except Exception:
+            return jsonify({"error": "头像数据格式错误"}), 400
+        if len(raw) > 2 * 1024 * 1024:
+            return jsonify({"error": "头像文件不能超过2MB"}), 400
+        with open(filepath, 'wb') as f:
+            f.write(raw)
+
+    user.avatar_url = f"/uploads/avatars/{filename}"
+    user_storage.save(user)
+    return jsonify({"message": "头像更新成功", "avatar_url": user.avatar_url})
+
+
+@app.route("/uploads/avatars/<filename>")
+def serve_avatar(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
 
 
 @app.route("/api/auth/password", methods=["PUT"])
