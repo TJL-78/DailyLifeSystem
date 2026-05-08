@@ -345,6 +345,7 @@
                     </div>
                     <div style="margin-top:10px">
                         <button class="btn-success" onclick="saveJournal()" data-i18n="saveJournal"></button>
+                        <button style="background:#e74c3c;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;margin-left:8px" onclick="clearJournalForm()" data-i18n="clearJournal"></button>
                         <span id="journalMsg" style="font-size:13px;margin-left:12px;color:#27ae60"></span>
                     </div>
                 </div>
@@ -496,6 +497,7 @@
                 clickUploadImages: '📷 点击上传图片（最多9张）',
                 commentPlaceholder: '写评论...', sendComment: '发送',
                 noComments: '', imgUploading: '图片上传中...',
+                clearJournal: '一键清空', confirmClearJournal: '确定清空所有内容、天气、心情和图片吗？',
             },
             en: {
                 appTitle: 'Activity Manager', dashboard: '📊 Dashboard', allActivities: '📋 All Activities',
@@ -549,6 +551,7 @@
                 clickUploadImages: '📷 Click to upload images (max 9)',
                 commentPlaceholder: 'Write a comment...', sendComment: 'Send',
                 noComments: '', imgUploading: 'Uploading...',
+                clearJournal: 'Clear All', confirmClearJournal: 'Clear all content, weather, mood and images?',
             }
         };
 
@@ -1206,6 +1209,15 @@
                 setTimeout(() => { document.getElementById('journalMsg').textContent = ''; }, 2000);
                 loadJournalList();
             }
+        }
+
+        function clearJournalForm() {
+            if (!confirm(t('confirmClearJournal'))) return;
+            document.getElementById('journalContent').value = '';
+            document.getElementById('journalWeather').value = '';
+            document.getElementById('journalMood').value = '';
+            journalPendingImages = [];
+            renderImagePreviews();
         }
 
         function renderJournalImages(images) {
