@@ -10,7 +10,7 @@
         .app { display: flex; min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar { width: 240px; background: #2c3e50; color: #ecf0f1; padding: 20px 0; flex-shrink: 0; }
+        .sidebar { width: 240px; background: #2c3e50; color: #ecf0f1; padding: 20px 0; flex-shrink: 0; position: relative; }
         .sidebar h2 { padding: 0 20px; margin-bottom: 24px; font-size: 16px; }
         .sidebar .nav-item { display: block; padding: 10px 20px; color: #bdc3c7; cursor: pointer; font-size: 14px; border-left: 3px solid transparent; transition: all 0.2s; }
         .sidebar .nav-item:hover { background: #34495e; color: #fff; }
@@ -18,17 +18,22 @@
         .sidebar .nav-section { padding: 12px 20px 6px; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
         .sidebar .category-item { display: flex; align-items: center; gap: 8px; }
         .sidebar .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .sidebar .user-section { padding: 16px 20px; border-top: 1px solid #34495e; margin-top: auto; position: absolute; bottom: 0; width: 240px; }
+        .sidebar .user-section { padding: 16px 20px; border-top: 1px solid #34495e; position: absolute; bottom: 0; width: 240px; }
         .sidebar .user-section .username { font-size: 14px; }
         .sidebar .btn-logout { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 12px; margin-top: 4px; }
 
-        /* Main content */
+        /* Main */
         .main { flex: 1; padding: 24px; overflow-y: auto; }
         .page { display: none; }
         .page.active { display: block; }
 
+        /* Common */
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #2c3e50; }
+        .empty-msg { text-align: center; color: #aaa; padding: 40px; font-size: 14px; }
+        .hidden { display: none; }
+
         /* Dashboard */
-        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .dash-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
         .dash-card .number { font-size: 32px; font-weight: bold; }
         .dash-card .label { font-size: 13px; color: #888; margin-top: 4px; }
@@ -37,38 +42,52 @@
         .dash-card.done .number { color: #27ae60; }
         .dash-card.total .number { color: #2c3e50; }
 
-        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #2c3e50; }
-
-        /* Activity list */
+        /* Activity items */
         .activity-list { list-style: none; }
-        .activity-item { background: #fff; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
+        .activity-item { background: #fff; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); display: flex; align-items: flex-start; gap: 12px; }
         .activity-item.completed .activity-title { text-decoration: line-through; color: #999; }
-        .activity-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .activity-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-top: 2px; }
         .activity-check.checked { background: #27ae60; border-color: #27ae60; color: #fff; }
         .activity-body { flex: 1; min-width: 0; }
         .activity-title { font-size: 14px; font-weight: 500; }
-        .activity-meta { font-size: 12px; color: #999; margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .activity-meta { font-size: 12px; color: #999; margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 500; }
         .badge-low { background: #eaf7ea; color: #27ae60; }
         .badge-medium { background: #fef5e7; color: #f39c12; }
         .badge-high { background: #fde8e8; color: #e74c3c; }
         .badge-urgent { background: #e74c3c; color: #fff; }
         .badge-cat { background: #eef2f7; color: #555; }
-        .activity-actions { display: flex; gap: 4px; }
+        .badge-tag { background: #e8f0fe; color: #1a73e8; font-size: 10px; }
+        .badge-sub { background: #f0e8fe; color: #7c3aed; font-size: 10px; }
+        .activity-actions { display: flex; gap: 4px; flex-shrink: 0; }
         .activity-actions button { padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 11px; background: #fff; color: #666; }
         .activity-actions button:hover { background: #f5f5f5; }
         .activity-actions .btn-del { color: #e74c3c; border-color: #f5c6cb; }
 
-        /* Add form */
+        /* Subtasks */
+        .subtask-section { margin-top: 8px; padding-left: 32px; }
+        .subtask-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+        .subtask-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+        .subtask-check.checked { background: #27ae60; border-color: #27ae60; color: #fff; }
+        .subtask-add { display: flex; gap: 6px; margin-top: 4px; }
+        .subtask-add input { padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; flex: 1; }
+        .subtask-add button { padding: 4px 10px; border: none; background: #3498db; color: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        /* Forms */
         .add-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
         .add-section h3 { margin-bottom: 12px; font-size: 15px; }
         .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .form-row input, .form-row select, .form-row textarea { padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; }
-        .form-row input[type="text"], .form-row textarea { flex: 1; min-width: 180px; }
+        .form-row input[type="text"], .form-row textarea { flex: 1; min-width: 160px; }
         .form-row textarea { resize: vertical; height: 50px; }
         .btn-primary { background: #3498db; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .btn-primary:hover { background: #2980b9; }
         .btn-success { background: #27ae60; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        /* Search bar */
+        .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .search-bar input { flex: 1; padding: 8px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .search-bar button { padding: 8px 16px; background: #3498db; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
 
         /* Filters */
         .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
@@ -81,17 +100,30 @@
         .cat-name { flex: 1; font-size: 14px; }
         .cat-actions button { padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 11px; background: #fff; }
 
-        .empty-msg { text-align: center; color: #aaa; padding: 40px; font-size: 14px; }
-        .hidden { display: none; }
+        /* Calendar */
+        .calendar { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .cal-header h3 { font-size: 16px; }
+        .cal-header button { padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; background: #fff; font-size: 13px; }
+        .cal-header button:hover { background: #f5f5f5; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+        .cal-day-header { text-align: center; font-size: 12px; font-weight: 600; color: #888; padding: 8px 0; }
+        .cal-day { min-height: 80px; padding: 4px; border: 1px solid #f0f0f0; cursor: pointer; font-size: 12px; }
+        .cal-day:hover { background: #f8f9fa; }
+        .cal-day.today { background: #eef6ff; }
+        .cal-day.other-month { color: #ccc; }
+        .cal-day .day-num { font-weight: 600; margin-bottom: 2px; font-size: 13px; }
+        .cal-day .cal-event { padding: 1px 4px; margin-bottom: 1px; border-radius: 3px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .cal-day-detail { margin-top: 16px; background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- Sidebar -->
         <div class="sidebar">
             <h2>活动管理</h2>
             <div class="nav-item active" data-page="dashboard">📊 仪表盘</div>
             <div class="nav-item" data-page="activities">📋 全部活动</div>
+            <div class="nav-item" data-page="calendar">📅 日历视图</div>
             <div class="nav-section">分类</div>
             <div id="sidebarCategories"></div>
             <div class="nav-item" data-page="categories">⚙️ 管理分类</div>
@@ -101,9 +133,8 @@
             </div>
         </div>
 
-        <!-- Main -->
         <div class="main">
-            <!-- Dashboard Page -->
+            <!-- Dashboard -->
             <div class="page active" id="pageDashboard">
                 <h2 class="section-title">仪表盘</h2>
                 <div class="dashboard-stats" id="dashStats"></div>
@@ -113,10 +144,16 @@
                 <ul class="activity-list" id="recentList"></ul>
             </div>
 
-            <!-- Activities Page -->
+            <!-- Activities -->
             <div class="page" id="pageActivities">
                 <h2 class="section-title">全部活动</h2>
-                <!-- Quick add -->
+                <!-- Search -->
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="搜索活动（标题、描述、标签）..." onkeypress="if(event.key==='Enter')doSearch()">
+                    <button onclick="doSearch()">搜索</button>
+                    <button onclick="clearSearch()" style="background:#95a5a6">清除</button>
+                </div>
+                <!-- Add form -->
                 <div class="add-section">
                     <h3>添加活动</h3>
                     <div class="form-row">
@@ -143,6 +180,9 @@
                             <option value="monthly">每月</option>
                         </select>
                     </div>
+                    <div class="form-row">
+                        <input type="text" id="inputTags" placeholder="标签（逗号分隔，如：重要,会议）" style="flex:2">
+                    </div>
                     <button class="btn-success" onclick="addActivity()">添加</button>
                 </div>
                 <!-- Filters -->
@@ -166,7 +206,24 @@
                 <ul class="activity-list" id="activityList"></ul>
             </div>
 
-            <!-- Categories Page -->
+            <!-- Calendar -->
+            <div class="page" id="pageCalendar">
+                <h2 class="section-title">日历视图</h2>
+                <div class="calendar">
+                    <div class="cal-header">
+                        <button onclick="calPrev()">◀ 上月</button>
+                        <h3 id="calTitle"></h3>
+                        <button onclick="calNext()">下月 ▶</button>
+                    </div>
+                    <div class="cal-grid" id="calGrid"></div>
+                </div>
+                <div class="cal-day-detail" id="calDetail" style="display:none">
+                    <h3 id="calDetailTitle" class="section-title"></h3>
+                    <ul class="activity-list" id="calDetailList"></ul>
+                </div>
+            </div>
+
+            <!-- Categories -->
             <div class="page" id="pageCategories">
                 <h2 class="section-title">分类管理</h2>
                 <div class="add-section">
@@ -185,29 +242,30 @@
     <script>
         const API = '/api';
         let categories = [];
-        let currentCategoryFilter = null;
+        let calYear, calMonth;
+        let calEvents = {};
+        let isSearchMode = false;
 
         // Navigation
+        function showPage(page) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const nav = document.querySelector(`.nav-item[data-page="${page}"]`);
+            if (nav) nav.classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+            if (page === 'dashboard') loadDashboard();
+            else if (page === 'activities') { isSearchMode = false; loadActivities(); }
+            else if (page === 'calendar') loadCalendar();
+            else if (page === 'categories') loadCategoryPage();
+        }
+
         document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-            el.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                el.classList.add('active');
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                const page = el.dataset.page;
-                document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
-                currentCategoryFilter = null;
-                if (page === 'dashboard') loadDashboard();
-                else if (page === 'activities') loadActivities();
-                else if (page === 'categories') loadCategoryPage();
-            });
+            el.addEventListener('click', () => showPage(el.dataset.page));
         });
 
         function switchToActivitiesWithCategory(catId) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('pageActivities').classList.add('active');
+            showPage('activities');
             document.getElementById('filterCategory').value = catId;
-            currentCategoryFilter = catId;
             loadActivities();
         }
 
@@ -228,38 +286,30 @@
         async function loadCategories() {
             const res = await fetch(`${API}/categories`);
             categories = await res.json();
-            // Sidebar
-            const sidebar = document.getElementById('sidebarCategories');
-            sidebar.innerHTML = categories.map(c =>
+            document.getElementById('sidebarCategories').innerHTML = categories.map(c =>
                 `<div class="nav-item" onclick="switchToActivitiesWithCategory('${c.id}')"><span class="category-item"><span class="cat-dot" style="background:${c.color}"></span>${c.icon} ${c.name}</span></div>`
             ).join('');
-            // Filter dropdowns
-            const opts = '<option value="">全部分类</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-            document.getElementById('filterCategory').innerHTML = opts;
-            document.getElementById('inputCategory').innerHTML = '<option value="">无分类</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+            const catOpts = categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+            document.getElementById('filterCategory').innerHTML = '<option value="">全部分类</option>' + catOpts;
+            document.getElementById('inputCategory').innerHTML = '<option value="">无分类</option>' + catOpts;
         }
 
         async function loadCategoryPage() {
             await loadCategories();
             const list = document.getElementById('catList');
-            if (categories.length === 0) { list.innerHTML = '<div class="empty-msg">暂无分类</div>'; return; }
+            if (!categories.length) { list.innerHTML = '<div class="empty-msg">暂无分类</div>'; return; }
             list.innerHTML = categories.map(c => `
                 <li class="cat-item">
                     <span class="cat-color" style="background:${c.color}"></span>
                     <span class="cat-name">${c.icon} ${c.name}</span>
-                    <div class="cat-actions">
-                        <button onclick="deleteCategory('${c.id}')">删除</button>
-                    </div>
-                </li>
-            `).join('');
+                    <div class="cat-actions"><button onclick="deleteCategory('${c.id}')">删除</button></div>
+                </li>`).join('');
         }
 
         async function addCategory() {
             const name = document.getElementById('catName').value.trim();
             if (!name) { alert('请输入分类名称'); return; }
-            const color = document.getElementById('catColor').value;
-            const icon = document.getElementById('catIcon').value.trim();
-            await fetch(`${API}/categories`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, color, icon}) });
+            await fetch(`${API}/categories`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, color:document.getElementById('catColor').value, icon:document.getElementById('catIcon').value.trim()}) });
             document.getElementById('catName').value = '';
             document.getElementById('catIcon').value = '';
             await loadCategories();
@@ -268,7 +318,7 @@
 
         async function deleteCategory(id) {
             if (!confirm('确定删除此分类？')) return;
-            await fetch(`${API}/categories/${id}`, { method: 'DELETE' });
+            await fetch(`${API}/categories/${id}`, { method:'DELETE' });
             await loadCategories();
             loadCategoryPage();
         }
@@ -276,60 +326,85 @@
         // Dashboard
         async function loadDashboard() {
             const [statsRes, todayRes, allRes] = await Promise.all([
-                fetch(`${API}/stats`),
-                fetch(`${API}/activities?today=true`),
-                fetch(`${API}/activities`),
+                fetch(`${API}/stats`), fetch(`${API}/activities?today=true`), fetch(`${API}/activities`)
             ]);
             const stats = await statsRes.json();
             const today = await todayRes.json();
             const all = await allRes.json();
-
-            const pending = stats.by_status?.pending || 0;
-            const inProgress = stats.by_status?.in_progress || 0;
-            const completed = stats.by_status?.completed || 0;
-
+            const p = stats.by_status?.pending||0, ip = stats.by_status?.in_progress||0, c = stats.by_status?.completed||0;
+            const rate = stats.total ? Math.round(c / stats.total * 100) : 0;
             document.getElementById('dashStats').innerHTML = `
                 <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">总活动</div></div>
-                <div class="dash-card pending"><div class="number">${pending}</div><div class="label">待办</div></div>
-                <div class="dash-card progress"><div class="number">${inProgress}</div><div class="label">进行中</div></div>
-                <div class="dash-card done"><div class="number">${completed}</div><div class="label">已完成</div></div>
-            `;
+                <div class="dash-card pending"><div class="number">${p}</div><div class="label">待办</div></div>
+                <div class="dash-card progress"><div class="number">${ip}</div><div class="label">进行中</div></div>
+                <div class="dash-card done"><div class="number">${c}</div><div class="label">已完成</div></div>
+                <div class="dash-card"><div class="number" style="color:#8e44ad">${rate}%</div><div class="label">完成率</div></div>`;
+            document.getElementById('todayList').innerHTML = today.length ? today.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">今日暂无安排</div>';
+            const recent = all.filter(a => a.status==='pending'||a.status==='in_progress').slice(0,10);
+            document.getElementById('recentList').innerHTML = recent.length ? recent.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">暂无活动</div>';
+        }
 
-            document.getElementById('todayList').innerHTML = today.length ? today.map(a => renderActivity(a)).join('') : '<div class="empty-msg">今日暂无安排</div>';
-            // Recent: show latest 10 pending/in_progress
-            const recent = all.filter(a => a.status === 'pending' || a.status === 'in_progress').slice(0, 10);
-            document.getElementById('recentList').innerHTML = recent.length ? recent.map(a => renderActivity(a)).join('') : '<div class="empty-msg">暂无活动</div>';
+        // Search
+        async function doSearch() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) { clearSearch(); return; }
+            isSearchMode = true;
+            const res = await fetch(`${API}/activities/search?q=${encodeURIComponent(q)}`);
+            const results = await res.json();
+            const list = document.getElementById('activityList');
+            list.innerHTML = results.length ? results.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">未找到匹配的活动</div>';
+        }
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            isSearchMode = false;
+            loadActivities();
         }
 
         // Activities
         async function loadActivities() {
-            const status = document.getElementById('filterStatus').value;
-            const priority = document.getElementById('filterPriority').value;
-            const catId = document.getElementById('filterCategory').value;
+            if (isSearchMode) return;
+            const s = document.getElementById('filterStatus').value;
+            const p = document.getElementById('filterPriority').value;
+            const c = document.getElementById('filterCategory').value;
             let url = `${API}/activities?`;
-            if (status) url += `status=${status}&`;
-            if (priority) url += `priority=${priority}&`;
-            if (catId) url += `category_id=${catId}&`;
+            if (s) url += `status=${s}&`;
+            if (p) url += `priority=${p}&`;
+            if (c) url += `category_id=${c}&`;
             const res = await fetch(url);
             const activities = await res.json();
-            const list = document.getElementById('activityList');
-            list.innerHTML = activities.length ? activities.map(a => renderActivity(a)).join('') : '<div class="empty-msg">暂无活动</div>';
+            document.getElementById('activityList').innerHTML = activities.length ? activities.map(a => renderActivity(a, true)).join('') : '<div class="empty-msg">暂无活动</div>';
+            // Load subtasks for each top-level activity
+            activities.filter(a => !a.parent_id).forEach(a => loadSubtasks(a.id));
         }
 
-        function renderActivity(a) {
+        function renderActivity(a, showSubtasks = false) {
             const isChecked = a.status === 'completed';
-            const priorityBadge = {low:'badge-low', medium:'badge-medium', high:'badge-high', urgent:'badge-urgent'};
-            const priorityLabel = {low:'低', medium:'中', high:'高', urgent:'紧急'};
+            const pb = {low:'badge-low',medium:'badge-medium',high:'badge-high',urgent:'badge-urgent'};
+            const pl = {low:'低',medium:'中',high:'高',urgent:'紧急'};
             const cat = categories.find(c => c.id === a.category_id);
-            let meta = `<span class="badge ${priorityBadge[a.priority]}">${priorityLabel[a.priority]}</span>`;
+            let meta = `<span class="badge ${pb[a.priority]}">${pl[a.priority]}</span>`;
             if (cat) meta += `<span class="badge badge-cat">${cat.icon} ${cat.name}</span>`;
-            if (a.scheduled_date) meta += `<span>${a.scheduled_date}</span>`;
-            if (a.duration_minutes) meta += `<span>${a.duration_minutes}分钟</span>`;
+            if (a.scheduled_date) meta += `<span>📅 ${a.scheduled_date}</span>`;
+            if (a.duration_minutes) meta += `<span>⏱ ${a.duration_minutes}分</span>`;
+            if (a.tags && a.tags.length) meta += a.tags.map(t => `<span class="badge badge-tag">#${escapeHtml(t)}</span>`).join('');
+            if (a.parent_id) meta += `<span class="badge badge-sub">子任务</span>`;
 
             let actions = '';
             if (a.status === 'pending') actions = `<button onclick="startAct('${a.id}')">开始</button>`;
             if (a.status !== 'completed' && a.status !== 'cancelled') actions += `<button onclick="cancelAct('${a.id}')">取消</button>`;
             actions += `<button class="btn-del" onclick="deleteAct('${a.id}')">删除</button>`;
+
+            let subtaskHtml = '';
+            if (showSubtasks && !a.parent_id) {
+                subtaskHtml = `
+                <div class="subtask-section" id="subtasks-${a.id}"></div>
+                <div class="subtask-section">
+                    <div class="subtask-add">
+                        <input type="text" id="subtask-input-${a.id}" placeholder="添加子任务..." onkeypress="if(event.key==='Enter')addSubtask('${a.id}')">
+                        <button onclick="addSubtask('${a.id}')">+</button>
+                    </div>
+                </div>`;
+            }
 
             return `
             <li class="activity-item ${a.status}">
@@ -337,6 +412,7 @@
                 <div class="activity-body">
                     <div class="activity-title">${escapeHtml(a.title)}</div>
                     <div class="activity-meta">${meta}</div>
+                    ${subtaskHtml}
                 </div>
                 <div class="activity-actions">${actions}</div>
             </li>`;
@@ -344,9 +420,39 @@
 
         function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
 
+        // Subtasks
+        async function loadSubtasks(activityId) {
+            const res = await fetch(`${API}/activities/${activityId}/subtasks`);
+            const subtasks = await res.json();
+            const container = document.getElementById(`subtasks-${activityId}`);
+            if (!container) return;
+            if (!subtasks.length) { container.innerHTML = ''; return; }
+            container.innerHTML = subtasks.map(s => {
+                const checked = s.status === 'completed';
+                return `<div class="subtask-item">
+                    <div class="subtask-check ${checked?'checked':''}" onclick="toggleComplete('${s.id}','${s.status}')">${checked?'✓':''}</div>
+                    <span style="${checked?'text-decoration:line-through;color:#999':''}">${escapeHtml(s.title)}</span>
+                    <button style="border:none;background:none;color:#e74c3c;cursor:pointer;font-size:11px" onclick="deleteAct('${s.id}')">✕</button>
+                </div>`;
+            }).join('');
+        }
+
+        async function addSubtask(parentId) {
+            const input = document.getElementById(`subtask-input-${parentId}`);
+            const title = input.value.trim();
+            if (!title) return;
+            await fetch(`${API}/activities/${parentId}/subtasks`, {
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title})
+            });
+            input.value = '';
+            loadSubtasks(parentId);
+        }
+
         async function addActivity() {
             const title = document.getElementById('inputTitle').value.trim();
             if (!title) { alert('请输入标题'); return; }
+            const tagsStr = document.getElementById('inputTags').value.trim();
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
             const body = {
                 title,
                 description: document.getElementById('inputDesc').value.trim(),
@@ -356,6 +462,7 @@
                 scheduled_time: document.getElementById('inputTime').value || null,
                 duration_minutes: parseInt(document.getElementById('inputDuration').value) || null,
                 recurrence: document.getElementById('inputRecurrence').value,
+                tags,
             };
             await fetch(`${API}/activities`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
             document.getElementById('inputTitle').value = '';
@@ -363,17 +470,100 @@
             document.getElementById('inputDate').value = '';
             document.getElementById('inputTime').value = '';
             document.getElementById('inputDuration').value = '';
+            document.getElementById('inputTags').value = '';
             loadActivities(); loadDashboard();
         }
 
         async function toggleComplete(id, status) {
             if (status === 'completed') return;
-            await fetch(`${API}/activities/${id}/complete`, { method:'POST' });
+            await fetch(`${API}/activities/${id}/complete`, {method:'POST'});
             loadActivities(); loadDashboard();
         }
         async function startAct(id) { await fetch(`${API}/activities/${id}/start`, {method:'POST'}); loadActivities(); loadDashboard(); }
         async function cancelAct(id) { await fetch(`${API}/activities/${id}/cancel`, {method:'POST'}); loadActivities(); loadDashboard(); }
         async function deleteAct(id) { if(!confirm('确定删除？'))return; await fetch(`${API}/activities/${id}`,{method:'DELETE'}); loadActivities(); loadDashboard(); }
+
+        // Calendar
+        function loadCalendar() {
+            if (!calYear) {
+                const now = new Date();
+                calYear = now.getFullYear();
+                calMonth = now.getMonth();
+            }
+            renderCalendar();
+        }
+
+        async function renderCalendar() {
+            const title = `${calYear}年${calMonth+1}月`;
+            document.getElementById('calTitle').textContent = title;
+
+            // Fetch events for this month
+            const start = new Date(calYear, calMonth, 1);
+            const end = new Date(calYear, calMonth + 1, 0);
+            const startStr = start.toISOString().split('T')[0];
+            const endStr = end.toISOString().split('T')[0];
+
+            const res = await fetch(`${API}/activities/calendar?start=${startStr}&end=${endStr}`);
+            const events = await res.json();
+            calEvents = {};
+            events.forEach(e => {
+                const d = e.scheduled_date || e.due_date;
+                if (d) {
+                    if (!calEvents[d]) calEvents[d] = [];
+                    calEvents[d].push(e);
+                }
+            });
+
+            const grid = document.getElementById('calGrid');
+            const days = ['日','一','二','三','四','五','六'];
+            let html = days.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+            const firstDay = new Date(calYear, calMonth, 1).getDay();
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Previous month padding
+            const prevDays = new Date(calYear, calMonth, 0).getDate();
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += `<div class="cal-day other-month"><div class="day-num">${prevDays - i}</div></div>`;
+            }
+
+            // Current month
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isToday = dateStr === todayStr;
+                const dayEvents = calEvents[dateStr] || [];
+                const eventsHtml = dayEvents.slice(0, 3).map(e => {
+                    const cat = categories.find(c => c.id === e.category_id);
+                    const bg = cat ? cat.color : '#3498db';
+                    return `<div class="cal-event" style="background:${bg}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</div>`;
+                }).join('');
+                const more = dayEvents.length > 3 ? `<div style="font-size:10px;color:#888">+${dayEvents.length-3}更多</div>` : '';
+                html += `<div class="cal-day ${isToday?'today':''}" onclick="showDayDetail('${dateStr}')"><div class="day-num">${d}</div>${eventsHtml}${more}</div>`;
+            }
+
+            // Next month padding
+            const totalCells = firstDay + daysInMonth;
+            const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 1; i <= remaining; i++) {
+                html += `<div class="cal-day other-month"><div class="day-num">${i}</div></div>`;
+            }
+
+            grid.innerHTML = html;
+            document.getElementById('calDetail').style.display = 'none';
+        }
+
+        function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+        function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+        function showDayDetail(dateStr) {
+            const events = calEvents[dateStr] || [];
+            document.getElementById('calDetail').style.display = 'block';
+            document.getElementById('calDetailTitle').textContent = dateStr + ' 的活动';
+            document.getElementById('calDetailList').innerHTML = events.length
+                ? events.map(a => renderActivity(a, false)).join('')
+                : '<div class="empty-msg">当天无活动</div>';
+        }
 
         // Init
         async function init() {

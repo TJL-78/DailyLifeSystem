@@ -310,6 +310,80 @@ def delete_activity(activity_id):
     return jsonify({"message": "deleted"})
 
 
+# ---- Search ----
+
+@app.route("/api/activities/search", methods=["GET"])
+@login_required
+def search_activities():
+    """Search activities by keyword in title/description."""
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+    activities = activity_storage.get_by_user(current_user_id())
+    q_lower = q.lower()
+    results = [a for a in activities if q_lower in a.title.lower() or q_lower in a.description.lower() or any(q_lower in t.lower() for t in a.tags)]
+    return jsonify([a.to_dict() for a in results])
+
+
+# ---- Subtasks ----
+
+@app.route("/api/activities/<activity_id>/subtasks", methods=["GET"])
+@login_required
+def list_subtasks(activity_id):
+    """List subtasks of an activity."""
+    parent = activity_storage.get(activity_id)
+    if not parent or parent.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    all_activities = activity_storage.get_by_user(current_user_id())
+    subtasks = [a for a in all_activities if a.parent_id == activity_id]
+    return jsonify([a.to_dict() for a in subtasks])
+
+
+@app.route("/api/activities/<activity_id>/subtasks", methods=["POST"])
+@login_required
+def create_subtask(activity_id):
+    """Create a subtask under a parent activity."""
+    parent = activity_storage.get(activity_id)
+    if not parent or parent.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json()
+    if not data or not data.get("title"):
+        return jsonify({"error": "title is required"}), 400
+    subtask = Activity(
+        title=data["title"],
+        user_id=current_user_id(),
+        description=data.get("description", ""),
+        priority=ActivityPriority(data.get("priority", parent.priority.value)),
+        category_id=parent.category_id,
+        scheduled_date=parent.scheduled_date,
+        parent_id=activity_id,
+        tags=data.get("tags", []),
+    )
+    activity_storage.save(subtask)
+    return jsonify(subtask.to_dict()), 201
+
+
+# ---- Calendar data ----
+
+@app.route("/api/activities/calendar", methods=["GET"])
+@login_required
+def calendar_activities():
+    """Get activities for a date range (for calendar view)."""
+    start = request.args.get("start")
+    end = request.args.get("end")
+    if not start or not end:
+        return jsonify({"error": "start and end required"}), 400
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    all_activities = activity_storage.get_by_user(current_user_id())
+    results = []
+    for a in all_activities:
+        d = a.scheduled_date or a.due_date
+        if d and start_date <= d <= end_date:
+            results.append(a)
+    return jsonify([a.to_dict() for a in results])
+
+
 @app.route("/api/stats", methods=["GET"])
 @login_required
 def get_stats():
