@@ -948,7 +948,9 @@
                 const color = colors[i % colors.length];
 
                 if (tasks.length === 1) {
-                    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.85"/>`;
+                    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.85">
+                        <title>${escapeHtml(task.title)}: ${task.minutes}${t('minutes')} (${Math.round(pct*100)}%)</title>
+                    </circle>`;
                 } else {
                     paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z" fill="${color}" opacity="0.85">
                         <title>${escapeHtml(task.title)}: ${task.minutes}${t('minutes')} (${Math.round(pct*100)}%)</title>
