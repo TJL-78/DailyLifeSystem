@@ -11,7 +11,7 @@ from datetime import date, time, datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request, render_template, session, redirect, url_for, Response, send_from_directory
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
 from .user_model import User
 
 app = Flask(__name__)
@@ -33,21 +33,23 @@ logger = logging.getLogger(__name__)
 _use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
 
 if _use_mysql:
-    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage, MySQLHabitStorage, MySQLHabitRecordStorage
+    from .database import Database, MySQLUserStorage, MySQLCategoryStorage, MySQLActivityStorage, MySQLHabitStorage, MySQLHabitRecordStorage, MySQLJournalStorage
     _db = Database()
     user_storage = MySQLUserStorage(_db)
     category_storage = MySQLCategoryStorage(_db)
     activity_storage = MySQLActivityStorage(_db)
     habit_storage = MySQLHabitStorage(_db)
     habit_record_storage = MySQLHabitRecordStorage(_db)
+    journal_storage = MySQLJournalStorage(_db)
 else:
     from .user_storage import JSONUserStorage
-    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage
+    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage
     user_storage = JSONUserStorage("users.json")
     category_storage = JSONCategoryStorage("categories.json")
     activity_storage = JSONActivityStorage("activities.json")
     habit_storage = JSONHabitStorage("habits.json")
     habit_record_storage = JSONHabitRecordStorage("habit_records.json")
+    journal_storage = JSONJournalStorage("journals.json")
 
 
 def login_required(f):
@@ -687,6 +689,94 @@ def habit_records(habit_id):
     end_date = date.fromisoformat(end) if end else None
     records = habit_record_storage.get_by_habit(habit_id, start_date, end_date)
     return jsonify([r.to_dict() for r in records])
+
+
+# ---- Journal Routes ----
+
+@app.route("/api/journals", methods=["GET"])
+@login_required
+def list_journals():
+    journals = journal_storage.get_by_user(current_user_id())
+    return jsonify([j.to_dict() for j in journals])
+
+
+@app.route("/api/journals", methods=["POST"])
+@login_required
+def create_or_update_journal():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "no data"}), 400
+    journal_date_str = data.get("journal_date")
+    if not journal_date_str:
+        return jsonify({"error": "journal_date required"}), 400
+    journal_date = date.fromisoformat(journal_date_str)
+
+    # Check if journal for this date already exists -> update
+    existing = journal_storage.get_by_date(current_user_id(), journal_date)
+    if existing:
+        existing.content = data.get("content", existing.content)
+        existing.weather = data.get("weather", existing.weather)
+        existing.mood = data.get("mood", existing.mood)
+        existing.updated_at = datetime.now()
+        journal_storage.save(existing)
+        return jsonify(existing.to_dict())
+
+    journal = Journal(
+        user_id=current_user_id(),
+        journal_date=journal_date,
+        content=data.get("content", ""),
+        weather=data.get("weather", ""),
+        mood=data.get("mood", ""),
+    )
+    journal_storage.save(journal)
+    return jsonify(journal.to_dict()), 201
+
+
+@app.route("/api/journals/<journal_id>", methods=["GET"])
+@login_required
+def get_journal(journal_id):
+    journal = journal_storage.get(journal_id)
+    if not journal or journal.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    return jsonify(journal.to_dict())
+
+
+@app.route("/api/journals/<journal_id>", methods=["PUT"])
+@login_required
+def update_journal(journal_id):
+    journal = journal_storage.get(journal_id)
+    if not journal or journal.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json()
+    if "content" in data:
+        journal.content = data["content"]
+    if "weather" in data:
+        journal.weather = data["weather"]
+    if "mood" in data:
+        journal.mood = data["mood"]
+    journal.updated_at = datetime.now()
+    journal_storage.save(journal)
+    return jsonify(journal.to_dict())
+
+
+@app.route("/api/journals/<journal_id>", methods=["DELETE"])
+@login_required
+def delete_journal(journal_id):
+    journal = journal_storage.get(journal_id)
+    if not journal or journal.user_id != current_user_id():
+        return jsonify({"error": "not found"}), 404
+    journal_storage.delete(journal_id)
+    return jsonify({"message": "deleted"})
+
+
+@app.route("/api/journals/date/<date_str>", methods=["GET"])
+@login_required
+def get_journal_by_date(date_str):
+    journal_date = date.fromisoformat(date_str)
+    journal = journal_storage.get_by_date(current_user_id(), journal_date)
+    if not journal:
+        return jsonify({"error": "not found"}), 404
+    return jsonify(journal.to_dict())
 
 
 # ---- Export ----

@@ -8,7 +8,7 @@ from datetime import datetime, date, time
 import pymysql
 import pymysql.cursors
 
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
 from .user_model import User
 
 
@@ -508,3 +508,94 @@ class MySQLHabitRecordStorage:
         rec.id = r["id"]
         rec.created_at = r["created_at"]
         return rec
+
+
+class MySQLJournalStorage:
+    """MySQL storage for daily journals."""
+
+    def __init__(self, db: Database):
+        self.db = db
+        self._init_table()
+
+    def _init_table(self):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS journals (
+                        id VARCHAR(36) PRIMARY KEY,
+                        user_id VARCHAR(36) NOT NULL,
+                        journal_date DATE NOT NULL,
+                        content TEXT,
+                        weather VARCHAR(50),
+                        mood VARCHAR(50),
+                        created_at DATETIME NOT NULL,
+                        updated_at DATETIME NOT NULL,
+                        UNIQUE KEY (user_id, journal_date),
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """)
+            conn.commit()
+        finally:
+            conn.close()
+
+    def save(self, journal: Journal):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO journals (id, user_id, journal_date, content, weather, mood, created_at, updated_at)
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                       ON DUPLICATE KEY UPDATE content=VALUES(content), weather=VALUES(weather),
+                       mood=VALUES(mood), updated_at=VALUES(updated_at)""",
+                    (journal.id, journal.user_id, journal.journal_date, journal.content,
+                     journal.weather, journal.mood, journal.created_at, journal.updated_at))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get(self, journal_id: str) -> Optional[Journal]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM journals WHERE id = %s", (journal_id,))
+                r = cursor.fetchone()
+                return self._row(r) if r else None
+        finally:
+            conn.close()
+
+    def get_by_user(self, user_id: str) -> List[Journal]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM journals WHERE user_id = %s ORDER BY journal_date DESC", (user_id,))
+                return [self._row(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_by_date(self, user_id: str, journal_date: date) -> Optional[Journal]:
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM journals WHERE user_id = %s AND journal_date = %s", (user_id, journal_date))
+                r = cursor.fetchone()
+                return self._row(r) if r else None
+        finally:
+            conn.close()
+
+    def delete(self, journal_id: str):
+        conn = self.db.get_connection()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM journals WHERE id = %s", (journal_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _row(self, r):
+        j = Journal(user_id=r["user_id"], journal_date=r["journal_date"], content=r.get("content") or "",
+                    weather=r.get("weather") or "", mood=r.get("mood") or "")
+        j.id = r["id"]
+        j.created_at = r["created_at"]
+        j.updated_at = r["updated_at"]
+        return j

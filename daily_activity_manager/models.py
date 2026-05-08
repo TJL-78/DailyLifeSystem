@@ -159,3 +159,28 @@ class HabitRecord:
             "note": self.note,
             "created_at": self.created_at.isoformat(),
         }
+
+
+@dataclass
+class Journal:
+    """A daily journal entry."""
+    user_id: str
+    journal_date: date
+    content: str = ""
+    weather: str = ""
+    mood: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "journal_date": self.journal_date.isoformat(),
+            "content": self.content,
+            "weather": self.weather,
+            "mood": self.mood,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }

@@ -125,6 +125,7 @@
             <div class="nav-item" data-page="activities" data-i18n="allActivities"></div>
             <div class="nav-item" data-page="calendar" data-i18n="calendarView"></div>
             <div class="nav-item" data-page="habits" data-i18n="habitTrack"></div>
+            <div class="nav-item" data-page="journal" data-i18n="journalNav"></div>
             <div class="nav-item" data-page="statistics" data-i18n="statistics"></div>
             <div class="nav-section" data-i18n="categoryLabel"></div>
             <div id="sidebarCategories"></div>
@@ -269,6 +270,51 @@
                 <div id="habitList"></div>
             </div>
 
+            <!-- Journal -->
+            <div class="page" id="pageJournal">
+                <h2 class="section-title" data-i18n="journalTitle"></h2>
+                <div class="add-section">
+                    <h3 data-i18n="writeJournal"></h3>
+                    <div class="form-row">
+                        <div style="display:flex;flex-direction:column;gap:4px">
+                            <label style="font-size:12px;color:#888" data-i18n="journalDate"></label>
+                            <input type="date" id="journalDate" style="padding:8px 12px;border:1px solid #e0e0e0;border-radius:6px">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+                            <label style="font-size:12px;color:#888" data-i18n="weather"></label>
+                            <select id="journalWeather" style="padding:8px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px">
+                                <option value="">--</option>
+                                <option value="sunny" data-i18n="weatherSunny"></option>
+                                <option value="cloudy" data-i18n="weatherCloudy"></option>
+                                <option value="overcast" data-i18n="weatherOvercast"></option>
+                                <option value="rainy" data-i18n="weatherRainy"></option>
+                                <option value="snowy" data-i18n="weatherSnowy"></option>
+                                <option value="windy" data-i18n="weatherWindy"></option>
+                            </select>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+                            <label style="font-size:12px;color:#888" data-i18n="mood"></label>
+                            <select id="journalMood" style="padding:8px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:13px">
+                                <option value="">--</option>
+                                <option value="happy" data-i18n="moodHappy"></option>
+                                <option value="calm" data-i18n="moodCalm"></option>
+                                <option value="excited" data-i18n="moodExcited"></option>
+                                <option value="sad" data-i18n="moodSad"></option>
+                                <option value="angry" data-i18n="moodAngry"></option>
+                                <option value="tired" data-i18n="moodTired"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="journalContent" data-i18n-placeholder="contentPlaceholder" style="width:100%;min-height:120px;resize:vertical;padding:10px 14px;border:1px solid #e0e0e0;border-radius:6px;font-size:14px;line-height:1.6"></textarea>
+                    </div>
+                    <button class="btn-success" onclick="saveJournal()" data-i18n="saveJournal"></button>
+                    <span id="journalMsg" style="font-size:13px;margin-left:12px;color:#27ae60"></span>
+                </div>
+                <h3 class="section-title" style="margin-top:20px" data-i18n="journalHistory"></h3>
+                <div id="journalList"></div>
+            </div>
+
             <!-- Statistics -->
             <div class="page" id="pageStatistics">
                 <h2 class="section-title" data-i18n="statsTitle"></h2>
@@ -363,7 +409,7 @@
         const I18N = {
             zh: {
                 appTitle: '活动管理', dashboard: '📊 仪表盘', allActivities: '📋 全部活动',
-                calendarView: '📅 日历视图', habitTrack: '🎯 习惯追踪', statistics: '📈 统计分析',
+                calendarView: '📅 日历视图', habitTrack: '🎯 习惯追踪', journalNav: '📝 每日日志', statistics: '📈 统计分析',
                 categoryLabel: '分类', manageCategories: '⚙️ 管理分类', settingsNav: '👤 个人设置',
                 logout: '退出登录', settings: '个人设置', langSwitch: '语言切换',
                 avatar: '头像设置', chooseAvatar: '选择图片', uploadAvatar: '上传头像',
@@ -401,10 +447,19 @@
                 catTimeTitle: '分类执行时间分析',
                 totalTime2: '总计', minutes: '分钟', proportion: '占比',
                 noTimeData: '暂无执行时间数据（请为活动设置时长）',
+                journalTitle: '每日日志', writeJournal: '撰写日志', journalDate: '日期',
+                weather: '天气', mood: '心情', journalContent: '日志内容',
+                contentPlaceholder: '记录今天的点滴...', saveJournal: '保存日志',
+                journalHistory: '历史日志', noJournals: '暂无日志记录',
+                journalSaved: '日志已保存', confirmDeleteJournal: '确定删除这篇日志？',
+                weatherSunny: '☀️ 晴', weatherCloudy: '⛅ 多云', weatherOvercast: '☁️ 阴',
+                weatherRainy: '🌧️ 雨', weatherSnowy: '❄️ 雪', weatherWindy: '💨 大风',
+                moodHappy: '😊 开心', moodCalm: '😌 平静', moodSad: '😢 难过',
+                moodAngry: '😤 生气', moodTired: '😴 疲惫', moodExcited: '🤩 兴奋',
             },
             en: {
                 appTitle: 'Activity Manager', dashboard: '📊 Dashboard', allActivities: '📋 All Activities',
-                calendarView: '📅 Calendar', habitTrack: '🎯 Habits', statistics: '📈 Statistics',
+                calendarView: '📅 Calendar', habitTrack: '🎯 Habits', journalNav: '📝 Journal', statistics: '📈 Statistics',
                 categoryLabel: 'Categories', manageCategories: '⚙️ Manage Categories', settingsNav: '👤 Settings',
                 logout: 'Logout', settings: 'Settings', langSwitch: 'Language',
                 avatar: 'Avatar', chooseAvatar: 'Choose Image', uploadAvatar: 'Upload',
@@ -442,6 +497,15 @@
                 catTimeTitle: 'Category Time Analysis',
                 totalTime2: 'Total', minutes: 'min', proportion: 'Share',
                 noTimeData: 'No time data (set duration for activities)',
+                journalTitle: 'Daily Journal', writeJournal: 'Write Journal', journalDate: 'Date',
+                weather: 'Weather', mood: 'Mood', journalContent: 'Content',
+                contentPlaceholder: 'Record your day...', saveJournal: 'Save',
+                journalHistory: 'Journal History', noJournals: 'No journal entries yet',
+                journalSaved: 'Journal saved', confirmDeleteJournal: 'Delete this journal?',
+                weatherSunny: '☀️ Sunny', weatherCloudy: '⛅ Cloudy', weatherOvercast: '☁️ Overcast',
+                weatherRainy: '🌧️ Rainy', weatherSnowy: '❄️ Snowy', weatherWindy: '💨 Windy',
+                moodHappy: '😊 Happy', moodCalm: '😌 Calm', moodSad: '😢 Sad',
+                moodAngry: '😤 Angry', moodTired: '😴 Tired', moodExcited: '🤩 Excited',
             }
         };
 
@@ -483,6 +547,7 @@
             else if (page === 'calendar') loadCalendar();
             else if (page === 'categories') loadCategoryPage();
             else if (page === 'habits') loadHabitsPage();
+            else if (page === 'journal') loadJournalPage();
             else if (page === 'statistics') loadStatisticsPage();
             else if (page === 'settings') loadSettingsPage();
         }
@@ -1000,6 +1065,91 @@
 
         function exportJSON() { window.location.href = `${API}/export/json`; }
         function exportCSV() { window.location.href = `${API}/export/csv`; }
+
+        // ---- Journal ----
+        const weatherLabels = {sunny:'weatherSunny',cloudy:'weatherCloudy',overcast:'weatherOvercast',rainy:'weatherRainy',snowy:'weatherSnowy',windy:'weatherWindy'};
+        const moodLabels = {happy:'moodHappy',calm:'moodCalm',excited:'moodExcited',sad:'moodSad',angry:'moodAngry',tired:'moodTired'};
+
+        function loadJournalPage() {
+            // Set default date to today
+            const dateInput = document.getElementById('journalDate');
+            if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+            document.getElementById('journalMsg').textContent = '';
+            loadJournalList();
+            // Try to load existing journal for selected date
+            loadJournalForDate(dateInput.value);
+            dateInput.onchange = function() { loadJournalForDate(this.value); };
+        }
+
+        async function loadJournalForDate(dateStr) {
+            const res = await fetch(`${API}/journals/date/${dateStr}`);
+            if (res.ok) {
+                const j = await res.json();
+                document.getElementById('journalWeather').value = j.weather || '';
+                document.getElementById('journalMood').value = j.mood || '';
+                document.getElementById('journalContent').value = j.content || '';
+            } else {
+                document.getElementById('journalWeather').value = '';
+                document.getElementById('journalMood').value = '';
+                document.getElementById('journalContent').value = '';
+            }
+        }
+
+        async function saveJournal() {
+            const journal_date = document.getElementById('journalDate').value;
+            const content = document.getElementById('journalContent').value.trim();
+            const weather = document.getElementById('journalWeather').value;
+            const mood = document.getElementById('journalMood').value;
+            if (!journal_date) return;
+
+            const res = await fetch(`${API}/journals`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ journal_date, content, weather, mood })
+            });
+            if (res.ok) {
+                document.getElementById('journalMsg').textContent = t('journalSaved');
+                setTimeout(() => { document.getElementById('journalMsg').textContent = ''; }, 2000);
+                loadJournalList();
+            }
+        }
+
+        async function loadJournalList() {
+            const res = await fetch(`${API}/journals`);
+            const journals = await res.json();
+            const container = document.getElementById('journalList');
+            if (!journals.length) {
+                container.innerHTML = `<div class="empty-msg">${t('noJournals')}</div>`;
+                return;
+            }
+            container.innerHTML = journals.map(j => {
+                const wLabel = j.weather ? t(weatherLabels[j.weather] || j.weather) : '';
+                const mLabel = j.mood ? t(moodLabels[j.mood] || j.mood) : '';
+                const preview = (j.content || '').substring(0, 100) + (j.content && j.content.length > 100 ? '...' : '');
+                return `<div class="add-section" style="margin-bottom:8px;cursor:pointer" onclick="viewJournal('${j.journal_date}')">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span style="font-weight:600;font-size:14px">${j.journal_date}</span>
+                            ${wLabel ? `<span style="font-size:13px">${wLabel}</span>` : ''}
+                            ${mLabel ? `<span style="font-size:13px">${mLabel}</span>` : ''}
+                        </div>
+                        <button style="padding:4px 8px;border:1px solid #e74c3c;border-radius:4px;cursor:pointer;font-size:11px;background:#fff;color:#e74c3c" onclick="event.stopPropagation();deleteJournal('${j.id}')">${t('delete')}</button>
+                    </div>
+                    ${preview ? `<div style="font-size:13px;color:#666;margin-top:6px;white-space:pre-line">${escapeHtml(preview)}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function viewJournal(dateStr) {
+            document.getElementById('journalDate').value = dateStr;
+            loadJournalForDate(dateStr);
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        async function deleteJournal(id) {
+            if (!confirm(t('confirmDeleteJournal'))) return;
+            await fetch(`${API}/journals/${id}`, { method: 'DELETE' });
+            loadJournalList();
+        }
 
         // ---- Settings ----
         async function loadSettingsPage() {

@@ -4,7 +4,7 @@ import json
 import os
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal
 
 
 class JSONCategoryStorage:
@@ -285,3 +285,68 @@ class JSONHabitRecordStorage:
             return False
         self._write_all(filtered)
         return True
+
+
+class JSONJournalStorage:
+    """JSON storage for daily journals."""
+
+    def __init__(self, filepath: str = "journals.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, journal: Journal):
+        items = self._read_all()
+        for i, j in enumerate(items):
+            if j["id"] == journal.id:
+                items[i] = journal.to_dict()
+                self._write_all(items)
+                return
+        items.append(journal.to_dict())
+        self._write_all(items)
+
+    def get(self, journal_id: str) -> Optional[Journal]:
+        for j in self._read_all():
+            if j["id"] == journal_id:
+                return self._from_dict(j)
+        return None
+
+    def get_by_user(self, user_id: str) -> List[Journal]:
+        result = []
+        for j in self._read_all():
+            if j["user_id"] == user_id:
+                result.append(self._from_dict(j))
+        result.sort(key=lambda x: x.journal_date, reverse=True)
+        return result
+
+    def get_by_date(self, user_id: str, journal_date: date) -> Optional[Journal]:
+        for j in self._read_all():
+            if j["user_id"] == user_id and j["journal_date"] == journal_date.isoformat():
+                return self._from_dict(j)
+        return None
+
+    def delete(self, journal_id: str):
+        items = self._read_all()
+        self._write_all([j for j in items if j["id"] != journal_id])
+
+    @staticmethod
+    def _from_dict(d: dict) -> Journal:
+        j = Journal(
+            user_id=d["user_id"],
+            journal_date=date.fromisoformat(d["journal_date"]),
+            content=d.get("content", ""),
+            weather=d.get("weather", ""),
+            mood=d.get("mood", ""),
+        )
+        j.id = d["id"]
+        j.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        j.updated_at = datetime.fromisoformat(d["updated_at"]) if d.get("updated_at") else datetime.now()
+        return j
