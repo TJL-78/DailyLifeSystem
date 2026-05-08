@@ -960,6 +960,11 @@
         function calcStreak(checkedDates) {
             let streak = 0;
             const d = new Date();
+            // If today is not checked, start counting from yesterday
+            const todayStr = d.toISOString().split('T')[0];
+            if (!checkedDates.has(todayStr)) {
+                d.setDate(d.getDate() - 1);
+            }
             while (true) {
                 const ds = d.toISOString().split('T')[0];
                 if (checkedDates.has(ds)) { streak++; d.setDate(d.getDate() - 1); }
