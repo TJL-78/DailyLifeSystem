@@ -6,263 +6,382 @@
     <title>日常活动管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; margin: 20px 0; color: #2c3e50; }
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 8px; }
-        .top-bar .user-info { font-size: 14px; color: #555; }
-        .top-bar .btn-logout { padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px; background: #fff; color: #666; }
-        .top-bar .btn-logout:hover { background: #f0f0f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; color: #333; }
+        .app { display: flex; min-height: 100vh; }
 
-        /* Stats bar */
-        .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .stat-card { background: #fff; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 120px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card .number { font-size: 28px; font-weight: bold; color: #3498db; }
-        .stat-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+        /* Sidebar */
+        .sidebar { width: 240px; background: #2c3e50; color: #ecf0f1; padding: 20px 0; flex-shrink: 0; }
+        .sidebar h2 { padding: 0 20px; margin-bottom: 24px; font-size: 16px; }
+        .sidebar .nav-item { display: block; padding: 10px 20px; color: #bdc3c7; cursor: pointer; font-size: 14px; border-left: 3px solid transparent; transition: all 0.2s; }
+        .sidebar .nav-item:hover { background: #34495e; color: #fff; }
+        .sidebar .nav-item.active { background: #34495e; color: #fff; border-left-color: #3498db; }
+        .sidebar .nav-section { padding: 12px 20px 6px; font-size: 11px; text-transform: uppercase; color: #7f8c8d; letter-spacing: 1px; }
+        .sidebar .category-item { display: flex; align-items: center; gap: 8px; }
+        .sidebar .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .sidebar .user-section { padding: 16px 20px; border-top: 1px solid #34495e; margin-top: auto; position: absolute; bottom: 0; width: 240px; }
+        .sidebar .user-section .username { font-size: 14px; }
+        .sidebar .btn-logout { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 12px; margin-top: 4px; }
 
-        /* Filter bar */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-        .filter-bar select, .filter-bar button { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .filter-bar button { background: #3498db; color: #fff; border: none; cursor: pointer; }
-        .filter-bar button:hover { background: #2980b9; }
+        /* Main content */
+        .main { flex: 1; padding: 24px; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
 
-        /* Add form */
-        .add-form { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .add-form h3 { margin-bottom: 12px; }
-        .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .form-row input, .form-row select, .form-row textarea { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .form-row input[type="text"], .form-row textarea { flex: 1; min-width: 200px; }
-        .form-row textarea { resize: vertical; height: 60px; }
-        .btn-add { background: #27ae60; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-        .btn-add:hover { background: #219a52; }
+        /* Dashboard */
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .dash-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .dash-card .number { font-size: 32px; font-weight: bold; }
+        .dash-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+        .dash-card.pending .number { color: #f39c12; }
+        .dash-card.progress .number { color: #3498db; }
+        .dash-card.done .number { color: #27ae60; }
+        .dash-card.total .number { color: #2c3e50; }
+
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #2c3e50; }
 
         /* Activity list */
         .activity-list { list-style: none; }
-        .activity-item { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: flex-start; gap: 12px; }
-        .activity-item.completed { opacity: 0.6; }
-        .activity-item.cancelled { opacity: 0.4; }
-        .activity-status-icon { font-size: 20px; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
-        .activity-body { flex: 1; }
-        .activity-title { font-size: 16px; font-weight: 600; }
-        .activity-meta { font-size: 12px; color: #999; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
-        .activity-desc { font-size: 13px; color: #666; margin-top: 6px; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .activity-item { background: #fff; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
+        .activity-item.completed .activity-title { text-decoration: line-through; color: #999; }
+        .activity-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .activity-check.checked { background: #27ae60; border-color: #27ae60; color: #fff; }
+        .activity-body { flex: 1; min-width: 0; }
+        .activity-title { font-size: 14px; font-weight: 500; }
+        .activity-meta { font-size: 12px; color: #999; margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 500; }
         .badge-low { background: #eaf7ea; color: #27ae60; }
         .badge-medium { background: #fef5e7; color: #f39c12; }
         .badge-high { background: #fde8e8; color: #e74c3c; }
         .badge-urgent { background: #e74c3c; color: #fff; }
-        .badge-category { background: #eaf0fa; color: #3498db; }
-        .activity-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .activity-actions button { padding: 4px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; background: #fff; }
-        .activity-actions button:hover { background: #f0f0f0; }
-        .activity-actions .btn-delete { color: #e74c3c; border-color: #e74c3c; }
-        .activity-actions .btn-delete:hover { background: #fde8e8; }
+        .badge-cat { background: #eef2f7; color: #555; }
+        .activity-actions { display: flex; gap: 4px; }
+        .activity-actions button { padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 11px; background: #fff; color: #666; }
+        .activity-actions button:hover { background: #f5f5f5; }
+        .activity-actions .btn-del { color: #e74c3c; border-color: #f5c6cb; }
 
-        .empty-msg { text-align: center; color: #999; padding: 40px; }
-        .toggle-form { background: none; border: 1px dashed #aaa; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; margin-bottom: 16px; color: #666; font-size: 14px; }
-        .toggle-form:hover { border-color: #3498db; color: #3498db; }
+        /* Add form */
+        .add-section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .add-section h3 { margin-bottom: 12px; font-size: 15px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .form-row input, .form-row select, .form-row textarea { padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; }
+        .form-row input[type="text"], .form-row textarea { flex: 1; min-width: 180px; }
+        .form-row textarea { resize: vertical; height: 50px; }
+        .btn-primary { background: #3498db; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        /* Filters */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-bar select { padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; }
+
+        /* Category management */
+        .cat-list { list-style: none; }
+        .cat-item { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .cat-color { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        .cat-name { flex: 1; font-size: 14px; }
+        .cat-actions button { padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; font-size: 11px; background: #fff; }
+
+        .empty-msg { text-align: center; color: #aaa; padding: 40px; font-size: 14px; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="top-bar">
-            <span class="user-info" id="userInfo"></span>
-            <button class="btn-logout" onclick="doLogout()">退出登录</button>
-        </div>
-        <h1>日常活动管理系统</h1>
-
-        <!-- Stats -->
-        <div class="stats-bar" id="statsBar"></div>
-
-        <!-- Toggle add form -->
-        <button class="toggle-form" onclick="toggleForm()">+ 添加新活动</button>
-
-        <!-- Add form -->
-        <div class="add-form hidden" id="addForm">
-            <h3>添加新活动</h3>
-            <div class="form-row">
-                <input type="text" id="inputTitle" placeholder="活动标题 *" required>
-                <select id="inputPriority">
-                    <option value="low">低优先级</option>
-                    <option value="medium" selected>中优先级</option>
-                    <option value="high">高优先级</option>
-                    <option value="urgent">紧急</option>
-                </select>
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>活动管理</h2>
+            <div class="nav-item active" data-page="dashboard">📊 仪表盘</div>
+            <div class="nav-item" data-page="activities">📋 全部活动</div>
+            <div class="nav-section">分类</div>
+            <div id="sidebarCategories"></div>
+            <div class="nav-item" data-page="categories">⚙️ 管理分类</div>
+            <div class="user-section">
+                <div class="username" id="sidebarUser"></div>
+                <button class="btn-logout" onclick="doLogout()">退出登录</button>
             </div>
-            <div class="form-row">
-                <textarea id="inputDesc" placeholder="描述（可选）"></textarea>
-            </div>
-            <div class="form-row">
-                <input type="date" id="inputDate">
-                <input type="time" id="inputTime">
-                <input type="number" id="inputDuration" placeholder="时长(分钟)" min="1" style="width:120px">
-            </div>
-            <div class="form-row">
-                <input type="text" id="inputCategory" placeholder="分类（可选）">
-                <input type="text" id="inputTags" placeholder="标签，逗号分隔（可选）">
-                <select id="inputRecurrence">
-                    <option value="none">不重复</option>
-                    <option value="daily">每天</option>
-                    <option value="weekly">每周</option>
-                    <option value="monthly">每月</option>
-                </select>
-            </div>
-            <button class="btn-add" onclick="addActivity()">添加</button>
         </div>
 
-        <!-- Filters -->
-        <div class="filter-bar">
-            <select id="filterStatus" onchange="loadActivities()">
-                <option value="">全部状态</option>
-                <option value="pending">待处理</option>
-                <option value="in_progress">进行中</option>
-                <option value="completed">已完成</option>
-                <option value="cancelled">已取消</option>
-            </select>
-            <select id="filterPriority" onchange="loadActivities()">
-                <option value="">全部优先级</option>
-                <option value="low">低</option>
-                <option value="medium">中</option>
-                <option value="high">高</option>
-                <option value="urgent">紧急</option>
-            </select>
-            <button onclick="loadActivities()">刷新</button>
-        </div>
+        <!-- Main -->
+        <div class="main">
+            <!-- Dashboard Page -->
+            <div class="page active" id="pageDashboard">
+                <h2 class="section-title">仪表盘</h2>
+                <div class="dashboard-stats" id="dashStats"></div>
+                <h3 class="section-title">今日待办</h3>
+                <ul class="activity-list" id="todayList"></ul>
+                <h3 class="section-title" style="margin-top:20px">近期活动</h3>
+                <ul class="activity-list" id="recentList"></ul>
+            </div>
 
-        <!-- Activity list -->
-        <ul class="activity-list" id="activityList"></ul>
+            <!-- Activities Page -->
+            <div class="page" id="pageActivities">
+                <h2 class="section-title">全部活动</h2>
+                <!-- Quick add -->
+                <div class="add-section">
+                    <h3>添加活动</h3>
+                    <div class="form-row">
+                        <input type="text" id="inputTitle" placeholder="活动标题 *">
+                        <select id="inputPriority">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                        <select id="inputCategory"><option value="">无分类</option></select>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="inputDesc" placeholder="描述（可选）"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <input type="date" id="inputDate">
+                        <input type="time" id="inputTime">
+                        <input type="number" id="inputDuration" placeholder="时长(分)" style="width:90px" min="1">
+                        <select id="inputRecurrence">
+                            <option value="none">不重复</option>
+                            <option value="daily">每天</option>
+                            <option value="weekly">每周</option>
+                            <option value="monthly">每月</option>
+                        </select>
+                    </div>
+                    <button class="btn-success" onclick="addActivity()">添加</button>
+                </div>
+                <!-- Filters -->
+                <div class="filter-bar">
+                    <select id="filterStatus" onchange="loadActivities()">
+                        <option value="">全部状态</option>
+                        <option value="pending">待办</option>
+                        <option value="in_progress">进行中</option>
+                        <option value="completed">已完成</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                    <select id="filterPriority" onchange="loadActivities()">
+                        <option value="">全部优先级</option>
+                        <option value="low">低</option>
+                        <option value="medium">中</option>
+                        <option value="high">高</option>
+                        <option value="urgent">紧急</option>
+                    </select>
+                    <select id="filterCategory" onchange="loadActivities()"><option value="">全部分类</option></select>
+                </div>
+                <ul class="activity-list" id="activityList"></ul>
+            </div>
+
+            <!-- Categories Page -->
+            <div class="page" id="pageCategories">
+                <h2 class="section-title">分类管理</h2>
+                <div class="add-section">
+                    <div class="form-row">
+                        <input type="text" id="catName" placeholder="分类名称 *">
+                        <input type="color" id="catColor" value="#3498db" style="width:50px;height:34px;padding:2px">
+                        <input type="text" id="catIcon" placeholder="图标(emoji)" style="width:80px">
+                        <button class="btn-success" onclick="addCategory()">添加</button>
+                    </div>
+                </div>
+                <ul class="cat-list" id="catList"></ul>
+            </div>
+        </div>
     </div>
 
     <script>
         const API = '/api';
+        let categories = [];
+        let currentCategoryFilter = null;
 
-        function toggleForm() {
-            document.getElementById('addForm').classList.toggle('hidden');
+        // Navigation
+        document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const page = el.dataset.page;
+                document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+                currentCategoryFilter = null;
+                if (page === 'dashboard') loadDashboard();
+                else if (page === 'activities') loadActivities();
+                else if (page === 'categories') loadCategoryPage();
+            });
+        });
+
+        function switchToActivitiesWithCategory(catId) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pageActivities').classList.add('active');
+            document.getElementById('filterCategory').value = catId;
+            currentCategoryFilter = catId;
+            loadActivities();
         }
 
-        async function loadStats() {
-            const res = await fetch(`${API}/stats`);
-            const stats = await res.json();
-            const bar = document.getElementById('statsBar');
-            const statusLabels = { pending: '待处理', in_progress: '进行中', completed: '已完成', cancelled: '已取消' };
-            let html = `<div class="stat-card"><div class="number">${stats.total}</div><div class="label">总计</div></div>`;
-            for (const [k, v] of Object.entries(stats.by_status || {})) {
-                html += `<div class="stat-card"><div class="number">${v}</div><div class="label">${statusLabels[k] || k}</div></div>`;
-            }
-            bar.innerHTML = html;
-        }
-
-        async function loadActivities() {
-            const status = document.getElementById('filterStatus').value;
-            const priority = document.getElementById('filterPriority').value;
-            let url = `${API}/activities?`;
-            if (status) url += `status=${status}&`;
-            if (priority) url += `priority=${priority}&`;
-
-            const res = await fetch(url);
-            const activities = await res.json();
-            const list = document.getElementById('activityList');
-
-            if (activities.length === 0) {
-                list.innerHTML = '<div class="empty-msg">暂无活动</div>';
-                return;
-            }
-
-            const statusIcons = { pending: '○', in_progress: '◑', completed: '●', cancelled: '✕' };
-            const priorityBadge = { low: 'badge-low', medium: 'badge-medium', high: 'badge-high', urgent: 'badge-urgent' };
-            const priorityLabels = { low: '低', medium: '中', high: '高', urgent: '紧急' };
-
-            list.innerHTML = activities.map(a => {
-                const icon = statusIcons[a.status] || '?';
-                let actions = '';
-                if (a.status === 'pending') {
-                    actions = `<button onclick="startActivity('${a.id}')">开始</button><button onclick="completeActivity('${a.id}')">完成</button>`;
-                } else if (a.status === 'in_progress') {
-                    actions = `<button onclick="completeActivity('${a.id}')">完成</button>`;
-                }
-                if (a.status !== 'cancelled' && a.status !== 'completed') {
-                    actions += `<button onclick="cancelActivity('${a.id}')">取消</button>`;
-                }
-                actions += `<button class="btn-delete" onclick="deleteActivity('${a.id}')">删除</button>`;
-
-                let meta = `<span class="badge ${priorityBadge[a.priority]}">${priorityLabels[a.priority]}</span>`;
-                if (a.category) meta += `<span class="badge badge-category">${a.category}</span>`;
-                if (a.scheduled_date) meta += `<span>${a.scheduled_date}</span>`;
-                if (a.scheduled_time) meta += `<span>${a.scheduled_time}</span>`;
-                if (a.duration_minutes) meta += `<span>${a.duration_minutes}分钟</span>`;
-
-                return `
-                <li class="activity-item ${a.status}">
-                    <span class="activity-status-icon">${icon}</span>
-                    <div class="activity-body">
-                        <div class="activity-title">${escapeHtml(a.title)}</div>
-                        <div class="activity-meta">${meta}</div>
-                        ${a.description ? `<div class="activity-desc">${escapeHtml(a.description)}</div>` : ''}
-                    </div>
-                    <div class="activity-actions">${actions}</div>
-                </li>`;
-            }).join('');
-        }
-
-        function escapeHtml(text) {
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
-        }
-
-        async function addActivity() {
-            const title = document.getElementById('inputTitle').value.trim();
-            if (!title) { alert('请输入活动标题'); return; }
-
-            const tags = document.getElementById('inputTags').value.trim();
-            const body = {
-                title,
-                description: document.getElementById('inputDesc').value.trim(),
-                priority: document.getElementById('inputPriority').value,
-                scheduled_date: document.getElementById('inputDate').value || null,
-                scheduled_time: document.getElementById('inputTime').value || null,
-                duration_minutes: parseInt(document.getElementById('inputDuration').value) || null,
-                category: document.getElementById('inputCategory').value.trim(),
-                tags: tags ? tags.split(',').map(t => t.trim()) : [],
-                recurrence: document.getElementById('inputRecurrence').value,
-            };
-
-            await fetch(`${API}/activities`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            document.getElementById('inputTitle').value = '';
-            document.getElementById('inputDesc').value = '';
-            document.getElementById('inputDate').value = '';
-            document.getElementById('inputTime').value = '';
-            document.getElementById('inputDuration').value = '';
-            document.getElementById('inputCategory').value = '';
-            document.getElementById('inputTags').value = '';
-            refresh();
-        }
-
-        async function completeActivity(id) { await fetch(`${API}/activities/${id}/complete`, { method: 'POST' }); refresh(); }
-        async function startActivity(id) { await fetch(`${API}/activities/${id}/start`, { method: 'POST' }); refresh(); }
-        async function cancelActivity(id) { await fetch(`${API}/activities/${id}/cancel`, { method: 'POST' }); refresh(); }
-        async function deleteActivity(id) {
-            if (!confirm('确定删除？')) return;
-            await fetch(`${API}/activities/${id}`, { method: 'DELETE' }); refresh();
-        }
-
-        function refresh() { loadStats(); loadActivities(); loadUser(); }
-
+        // User
         async function loadUser() {
             const res = await fetch(`${API}/auth/me`);
             if (res.ok) {
                 const data = await res.json();
-                document.getElementById('userInfo').textContent = '当前用户: ' + (data.user.display_name || data.user.username);
+                document.getElementById('sidebarUser').textContent = data.user.display_name || data.user.username;
             }
         }
-
         async function doLogout() {
             await fetch(`${API}/auth/logout`, { method: 'POST' });
             window.location.href = '/login';
         }
 
-        refresh();
+        // Categories
+        async function loadCategories() {
+            const res = await fetch(`${API}/categories`);
+            categories = await res.json();
+            // Sidebar
+            const sidebar = document.getElementById('sidebarCategories');
+            sidebar.innerHTML = categories.map(c =>
+                `<div class="nav-item" onclick="switchToActivitiesWithCategory('${c.id}')"><span class="category-item"><span class="cat-dot" style="background:${c.color}"></span>${c.icon} ${c.name}</span></div>`
+            ).join('');
+            // Filter dropdowns
+            const opts = '<option value="">全部分类</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+            document.getElementById('filterCategory').innerHTML = opts;
+            document.getElementById('inputCategory').innerHTML = '<option value="">无分类</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+        }
+
+        async function loadCategoryPage() {
+            await loadCategories();
+            const list = document.getElementById('catList');
+            if (categories.length === 0) { list.innerHTML = '<div class="empty-msg">暂无分类</div>'; return; }
+            list.innerHTML = categories.map(c => `
+                <li class="cat-item">
+                    <span class="cat-color" style="background:${c.color}"></span>
+                    <span class="cat-name">${c.icon} ${c.name}</span>
+                    <div class="cat-actions">
+                        <button onclick="deleteCategory('${c.id}')">删除</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('catName').value.trim();
+            if (!name) { alert('请输入分类名称'); return; }
+            const color = document.getElementById('catColor').value;
+            const icon = document.getElementById('catIcon').value.trim();
+            await fetch(`${API}/categories`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, color, icon}) });
+            document.getElementById('catName').value = '';
+            document.getElementById('catIcon').value = '';
+            await loadCategories();
+            loadCategoryPage();
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('确定删除此分类？')) return;
+            await fetch(`${API}/categories/${id}`, { method: 'DELETE' });
+            await loadCategories();
+            loadCategoryPage();
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            const [statsRes, todayRes, allRes] = await Promise.all([
+                fetch(`${API}/stats`),
+                fetch(`${API}/activities?today=true`),
+                fetch(`${API}/activities`),
+            ]);
+            const stats = await statsRes.json();
+            const today = await todayRes.json();
+            const all = await allRes.json();
+
+            const pending = stats.by_status?.pending || 0;
+            const inProgress = stats.by_status?.in_progress || 0;
+            const completed = stats.by_status?.completed || 0;
+
+            document.getElementById('dashStats').innerHTML = `
+                <div class="dash-card total"><div class="number">${stats.total}</div><div class="label">总活动</div></div>
+                <div class="dash-card pending"><div class="number">${pending}</div><div class="label">待办</div></div>
+                <div class="dash-card progress"><div class="number">${inProgress}</div><div class="label">进行中</div></div>
+                <div class="dash-card done"><div class="number">${completed}</div><div class="label">已完成</div></div>
+            `;
+
+            document.getElementById('todayList').innerHTML = today.length ? today.map(a => renderActivity(a)).join('') : '<div class="empty-msg">今日暂无安排</div>';
+            // Recent: show latest 10 pending/in_progress
+            const recent = all.filter(a => a.status === 'pending' || a.status === 'in_progress').slice(0, 10);
+            document.getElementById('recentList').innerHTML = recent.length ? recent.map(a => renderActivity(a)).join('') : '<div class="empty-msg">暂无活动</div>';
+        }
+
+        // Activities
+        async function loadActivities() {
+            const status = document.getElementById('filterStatus').value;
+            const priority = document.getElementById('filterPriority').value;
+            const catId = document.getElementById('filterCategory').value;
+            let url = `${API}/activities?`;
+            if (status) url += `status=${status}&`;
+            if (priority) url += `priority=${priority}&`;
+            if (catId) url += `category_id=${catId}&`;
+            const res = await fetch(url);
+            const activities = await res.json();
+            const list = document.getElementById('activityList');
+            list.innerHTML = activities.length ? activities.map(a => renderActivity(a)).join('') : '<div class="empty-msg">暂无活动</div>';
+        }
+
+        function renderActivity(a) {
+            const isChecked = a.status === 'completed';
+            const priorityBadge = {low:'badge-low', medium:'badge-medium', high:'badge-high', urgent:'badge-urgent'};
+            const priorityLabel = {low:'低', medium:'中', high:'高', urgent:'紧急'};
+            const cat = categories.find(c => c.id === a.category_id);
+            let meta = `<span class="badge ${priorityBadge[a.priority]}">${priorityLabel[a.priority]}</span>`;
+            if (cat) meta += `<span class="badge badge-cat">${cat.icon} ${cat.name}</span>`;
+            if (a.scheduled_date) meta += `<span>${a.scheduled_date}</span>`;
+            if (a.duration_minutes) meta += `<span>${a.duration_minutes}分钟</span>`;
+
+            let actions = '';
+            if (a.status === 'pending') actions = `<button onclick="startAct('${a.id}')">开始</button>`;
+            if (a.status !== 'completed' && a.status !== 'cancelled') actions += `<button onclick="cancelAct('${a.id}')">取消</button>`;
+            actions += `<button class="btn-del" onclick="deleteAct('${a.id}')">删除</button>`;
+
+            return `
+            <li class="activity-item ${a.status}">
+                <div class="activity-check ${isChecked?'checked':''}" onclick="toggleComplete('${a.id}','${a.status}')">${isChecked?'✓':''}</div>
+                <div class="activity-body">
+                    <div class="activity-title">${escapeHtml(a.title)}</div>
+                    <div class="activity-meta">${meta}</div>
+                </div>
+                <div class="activity-actions">${actions}</div>
+            </li>`;
+        }
+
+        function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+        async function addActivity() {
+            const title = document.getElementById('inputTitle').value.trim();
+            if (!title) { alert('请输入标题'); return; }
+            const body = {
+                title,
+                description: document.getElementById('inputDesc').value.trim(),
+                priority: document.getElementById('inputPriority').value,
+                category_id: document.getElementById('inputCategory').value || null,
+                scheduled_date: document.getElementById('inputDate').value || null,
+                scheduled_time: document.getElementById('inputTime').value || null,
+                duration_minutes: parseInt(document.getElementById('inputDuration').value) || null,
+                recurrence: document.getElementById('inputRecurrence').value,
+            };
+            await fetch(`${API}/activities`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+            document.getElementById('inputTitle').value = '';
+            document.getElementById('inputDesc').value = '';
+            document.getElementById('inputDate').value = '';
+            document.getElementById('inputTime').value = '';
+            document.getElementById('inputDuration').value = '';
+            loadActivities(); loadDashboard();
+        }
+
+        async function toggleComplete(id, status) {
+            if (status === 'completed') return;
+            await fetch(`${API}/activities/${id}/complete`, { method:'POST' });
+            loadActivities(); loadDashboard();
+        }
+        async function startAct(id) { await fetch(`${API}/activities/${id}/start`, {method:'POST'}); loadActivities(); loadDashboard(); }
+        async function cancelAct(id) { await fetch(`${API}/activities/${id}/cancel`, {method:'POST'}); loadActivities(); loadDashboard(); }
+        async function deleteAct(id) { if(!confirm('确定删除？'))return; await fetch(`${API}/activities/${id}`,{method:'DELETE'}); loadActivities(); loadDashboard(); }
+
+        // Init
+        async function init() {
+            await loadUser();
+            await loadCategories();
+            loadDashboard();
+        }
+        init();
     </script>
 </body>
 </html>
