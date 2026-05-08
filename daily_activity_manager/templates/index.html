@@ -9,6 +9,10 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
         .container { max-width: 900px; margin: 0 auto; padding: 20px; }
         h1 { text-align: center; margin: 20px 0; color: #2c3e50; }
+        .top-bar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .top-bar .user-info { font-size: 14px; color: #555; }
+        .top-bar .btn-logout { padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px; background: #fff; color: #666; }
+        .top-bar .btn-logout:hover { background: #f0f0f0; }
 
         /* Stats bar */
         .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -62,6 +66,10 @@
 </head>
 <body>
     <div class="container">
+        <div class="top-bar">
+            <span class="user-info" id="userInfo"></span>
+            <button class="btn-logout" onclick="doLogout()">退出登录</button>
+        </div>
         <h1>日常活动管理系统</h1>
 
         <!-- Stats -->
@@ -239,7 +247,21 @@
             await fetch(`${API}/activities/${id}`, { method: 'DELETE' }); refresh();
         }
 
-        function refresh() { loadStats(); loadActivities(); }
+        function refresh() { loadStats(); loadActivities(); loadUser(); }
+
+        async function loadUser() {
+            const res = await fetch(`${API}/auth/me`);
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('userInfo').textContent = '当前用户: ' + (data.user.display_name || data.user.username);
+            }
+        }
+
+        async function doLogout() {
+            await fetch(`${API}/auth/logout`, { method: 'POST' });
+            window.location.href = '/login';
+        }
+
         refresh();
     </script>
 </body>
