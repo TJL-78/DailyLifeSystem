@@ -1,7 +1,7 @@
 """Flask Web API for the Daily Activity Management System."""
 
 from datetime import date, time
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from .manager import ActivityManager
 
 app = Flask(__name__)
@@ -118,8 +118,8 @@ def get_stats():
 
 @app.route("/", methods=["GET"])
 def index():
-    """Health check."""
-    return jsonify({"service": "Daily Activity Management System", "version": "0.1.0", "status": "running"})
+    """Serve the frontend page."""
+    return render_template("index.html")
 
 
 def run_server(host="0.0.0.0", port=5000, debug=False):

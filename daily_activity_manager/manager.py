@@ -1,16 +1,27 @@
 """Core manager for daily activities."""
 
+import os
 from datetime import date, time, datetime
 from typing import List, Optional
 from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType
-from .storage import JSONStorage
+
+
+def _create_storage(storage_path: str = "activities.json"):
+    """Create appropriate storage backend based on environment."""
+    use_mysql = os.environ.get("USE_MYSQL", "").lower() in ("1", "true", "yes")
+    if use_mysql:
+        from .mysql_storage import MySQLStorage
+        return MySQLStorage()
+    else:
+        from .storage import JSONStorage
+        return JSONStorage(storage_path)
 
 
 class ActivityManager:
     """Manages daily activities with CRUD and query operations."""
 
     def __init__(self, storage_path: str = "activities.json"):
-        self.storage = JSONStorage(storage_path)
+        self.storage = _create_storage(storage_path)
 
     def create_activity(
         self,
