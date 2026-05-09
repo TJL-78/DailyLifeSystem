@@ -1016,6 +1016,9 @@ def register_page():
 @app.route("/", methods=["GET"])
 @login_required
 def index():
+    vue_index = os.path.join(os.path.dirname(__file__), "static", "vue", "index.html")
+    if os.path.exists(vue_index):
+        return send_from_directory(os.path.join(os.path.dirname(__file__), "static", "vue"), "index.html")
     return render_template("index.html")
 
 
