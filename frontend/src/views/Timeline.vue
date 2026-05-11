@@ -29,9 +29,7 @@
         <div class="hour-cell"></div>
       </div>
       <!-- Current time indicator -->
-      <div class="current-time-line" :style="{ top: currentTimeTop + 'px' }">
-        <span class="time-label">{{ t('currentTime') }}</span>
-      </div>
+      <div class="current-time-line" :style="{ top: currentTimeTop + 'px' }"></div>
       <!-- Activity blocks -->
       <div v-for="act in scheduledActs" :key="act.id" class="activity-block"
         :style="getBlockStyle(act)"
@@ -155,7 +153,6 @@ h2 { margin-bottom: 16px; }
 .hour-label { width: 60px; padding: 4px 8px; font-size: 11px; color: #999; flex-shrink: 0; }
 .hour-cell { flex: 1; background: #f8f9fc; }
 .current-time-line { position: absolute; left: 50px; right: 0; height: 2px; background: #e74c3c; z-index: 10; pointer-events: none; }
-.current-time-line .time-label { position: absolute; left: -50px; top: -8px; font-size: 10px; color: #e74c3c; }
 .activity-block { position: absolute; border-radius: 6px; padding: 4px 8px; color: #fff; font-size: 12px; overflow: hidden; cursor: pointer; opacity: 0.9; min-height: 20px; z-index: 5; }
 .activity-block:hover { opacity: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 .block-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

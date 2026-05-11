@@ -53,11 +53,11 @@
                   fill="none" :stroke="s.color" stroke-width="20"
                   :stroke-dasharray="s.dash" :stroke-dashoffset="s.offset"
                   class="pie-slice"
-                  @mouseenter="showTooltip($event, cat, si)"
+                  @mouseenter="showTooltip($event, cat, si, ci)"
                   @mouseleave="hideTooltip"
                 />
               </svg>
-              <div v-if="tooltip.visible" class="pie-tooltip" :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }">
+              <div v-if="tooltip.visible && tooltip.catIndex === ci" class="pie-tooltip" :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }">
                 <div class="tooltip-name">{{ tooltip.name }}</div>
                 <div class="tooltip-detail">{{ tooltip.minutes }}{{ t('minutes') }} ({{ tooltip.pct }}%)</div>
               </div>
@@ -97,10 +97,10 @@ import api from '../api'
 const { t } = useI18n()
 const store = useAppStore()
 const detailed = ref({})
-const tooltip = reactive({ visible: false, name: '', minutes: 0, pct: '', x: 0, y: 0 })
+const tooltip = reactive({ visible: false, name: '', minutes: 0, pct: '', x: 0, y: 0, catIndex: -1 })
 const spinningSet = ref(new Set())
 
-function showTooltip(event, cat, sliceIndex) {
+function showTooltip(event, cat, sliceIndex, catIndex) {
   const task = cat.tasks[sliceIndex]
   if (!task) return
   const total = cat.total_minutes || 1
@@ -110,6 +110,7 @@ function showTooltip(event, cat, sliceIndex) {
   tooltip.pct = ((task.minutes / total) * 100).toFixed(1)
   tooltip.x = event.clientX - rect.left + 10
   tooltip.y = event.clientY - rect.top - 30
+  tooltip.catIndex = catIndex
   tooltip.visible = true
 }
 
@@ -118,12 +119,19 @@ function hideTooltip() {
 }
 
 function toggleSpin(ci) {
-  if (spinningSet.value.has(ci)) {
-    spinningSet.value.delete(ci)
-  } else {
+  // Remove first to allow re-trigger
+  spinningSet.value.delete(ci)
+  spinningSet.value = new Set(spinningSet.value)
+  // Use nextTick to re-add so animation restarts
+  requestAnimationFrame(() => {
     spinningSet.value.add(ci)
-  }
-  spinningSet.value = new Set(spinningSet.value) // trigger reactivity
+    spinningSet.value = new Set(spinningSet.value)
+    // Auto-remove after animation ends (2s)
+    setTimeout(() => {
+      spinningSet.value.delete(ci)
+      spinningSet.value = new Set(spinningSet.value)
+    }, 2000)
+  })
 }
 const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 const taskColors = ['#6366f1', '#14b8a6', '#f97316', '#e11d48', '#a855f7', '#0ea5e9', '#eab308', '#22c55e', '#f43f5e', '#8b5cf6']
@@ -228,7 +236,7 @@ onMounted(load)
 .cat-pie-card { background: #fafbfd; border: 1px solid #eef0f4; border-radius: 14px; padding: 20px; }
 .cat-pie-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
 .cat-pie-svg { width: 100px; height: 100px; flex-shrink: 0; cursor: pointer; transition: transform 0.3s; }
-.cat-pie-svg.spinning { animation: pie-spin 4s linear infinite; }
+.cat-pie-svg.spinning { animation: pie-spin 2s ease-in-out forwards; }
 @keyframes pie-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .cat-pie-wrap { position: relative; flex-shrink: 0; }
 .pie-slice { cursor: pointer; transition: opacity 0.2s; }

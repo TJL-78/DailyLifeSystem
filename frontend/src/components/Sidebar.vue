@@ -27,7 +27,7 @@
         <span class="nav-icon">▲</span><span>{{ t('statistics') }}</span>
       </router-link>
       <router-link to="/report" class="nav-item" :class="{ active: $route.name === 'report' }">
-        <span class="nav-icon">📊</span><span>{{ t('reportNav') }}</span>
+        <span class="nav-icon">▤</span><span>{{ t('reportNav') }}</span>
       </router-link>
       <router-link to="/pomodoro" class="nav-item" :class="{ active: $route.name === 'pomodoro' }">
         <span class="nav-icon">⏱</span><span>{{ t('pomodoroTitle') }}</span>
