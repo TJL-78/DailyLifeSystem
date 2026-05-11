@@ -28,12 +28,15 @@ class User:
 
     @staticmethod
     def hash_password(password: str, salt: Optional[str] = None) -> str:
-        """Hash a password. Uses bcrypt if available, else SHA256 with salt."""
+        """Hash a password. Uses bcrypt for new passwords, SHA256 when salt is provided (legacy)."""
+        if salt is not None:
+            # Legacy SHA256 path — used for verifying old passwords
+            hashed = hashlib.sha256((salt + password).encode()).hexdigest()
+            return f"{salt}${hashed}"
         if _USE_BCRYPT:
             hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
             return "bcrypt$" + hashed.decode()
-        if salt is None:
-            salt = os.urandom(16).hex()
+        salt = os.urandom(16).hex()
         hashed = hashlib.sha256((salt + password).encode()).hexdigest()
         return f"{salt}${hashed}"
 
