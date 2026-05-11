@@ -146,4 +146,20 @@ export default {
   createFinance: (data) => post(`${API}/finance`, data),
   deleteFinance: (id) => del(`${API}/finance/${id}`),
   getFinanceSummary: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/finance/summary?${q}`) },
+
+  // Smart Suggestions
+  getSuggestions: () => json(`${API}/suggestions`),
+
+  // Automation Rules
+  getAutomationRules: () => json(`${API}/automation/rules`),
+  createAutomationRule: (data) => post(`${API}/automation/rules`, data),
+  updateAutomationRule: (id, data) => put(`${API}/automation/rules/${id}`, data),
+  deleteAutomationRule: (id) => del(`${API}/automation/rules/${id}`),
+  checkAutomation: () => post(`${API}/automation/check`, {}),
+
+  // Time Blocks
+  getTimeBlocks: (dateStr) => { const q = new URLSearchParams(); if (dateStr) q.set('date_str', dateStr); return json(`${API}/timeblocks?${q}`) },
+  createTimeBlock: (data) => post(`${API}/timeblocks`, data),
+  updateTimeBlock: (id, data) => put(`${API}/timeblocks/${id}`, data),
+  deleteTimeBlock: (id) => del(`${API}/timeblocks/${id}`),
 }

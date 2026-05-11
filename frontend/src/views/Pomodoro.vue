@@ -38,6 +38,13 @@
         </select>
       </div>
 
+      <div class="focus-toggle" style="text-align:center;margin-bottom:12px">
+        <label class="toggle-label">
+          <input type="checkbox" v-model="focusMode" :disabled="running" />
+          <span>{{ t('focusModeLabel') }}</span>
+        </label>
+      </div>
+
       <div class="timer-controls">
         <template v-if="!showBreakPrompt">
           <button class="btn-primary btn-lg" v-if="!running" @click="startTimer">{{ t('startTimer') }}</button>
@@ -71,6 +78,15 @@
         <span v-if="s.activity_title" class="badge badge-tag">{{ s.activity_title }}</span>
       </div>
     </div>
+
+    <!-- Focus Mode Overlay -->
+    <div v-if="focusMode && running" class="focus-overlay">
+      <div class="focus-content">
+        <div class="focus-timer-display" :class="{ 'break-text': breakMode }">{{ displayMinutes }}:{{ displaySeconds }}</div>
+        <p class="focus-msg">{{ t('focusModeMsg') }}</p>
+        <button class="btn-exit-focus" @click="pauseTimer">{{ t('exitFocus') }}</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -89,6 +105,7 @@ const running = ref(false)
 const breakMode = ref(false)
 const showBreakPrompt = ref(false)
 const soundOption = ref(localStorage.getItem('pomodoroSound') || 'short')
+const focusMode = ref(false)
 const activities = ref([])
 const todaySessions = ref([])
 const todayStats = ref({})
@@ -284,4 +301,14 @@ onUnmounted(() => clearInterval(timer))
 .badge-tag { display: inline-flex; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; background: #eef2ff; color: #4f46e5; }
 .empty { color: #b0b4c8; font-size: 13px; padding: 20px 0; text-align: center; }
 .form-row { display: flex; gap: 8px; }
+.focus-toggle { font-size: 13px; color: #6b7085; }
+.toggle-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.toggle-label input { accent-color: #4f46e5; }
+.focus-overlay { position: fixed; inset: 0; background: rgba(10, 10, 30, 0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.focus-content { text-align: center; }
+.focus-timer-display { font-size: 120px; font-weight: 900; color: #4f46e5; font-variant-numeric: tabular-nums; }
+.focus-timer-display.break-text { color: #10b981; }
+.focus-msg { color: #8b8fa8; font-size: 16px; margin: 24px 0; }
+.btn-exit-focus { background: rgba(255,255,255,0.1); color: #aaa; border: 1px solid #555; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.btn-exit-focus:hover { background: rgba(255,255,255,0.2); color: #fff; }
 </style>

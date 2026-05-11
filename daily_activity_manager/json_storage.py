@@ -6,7 +6,7 @@ import fcntl
 import threading
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity, SleepRecord, MoodRecord, HealthRecord, FinanceRecord
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity, SleepRecord, MoodRecord, HealthRecord, FinanceRecord, AutomationRule, TimeBlock
 
 # Per-file threading locks to prevent concurrent access within the same process
 _file_locks = {}
@@ -876,3 +876,90 @@ class JSONFinanceStorage(_JSONStorageBase):
         r.note = d.get("note", "")
         r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
         return r
+
+
+class JSONAutomationRuleStorage(_JSONStorageBase):
+    def __init__(self, filepath="automation_rules.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, rule: AutomationRule):
+        items = self._read_all()
+        d = rule.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == rule.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, *args, **kwargs):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") == user_id:
+                result.append(self._from_dict(r))
+        return result
+
+    def delete(self, rule_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != rule_id])
+
+    @staticmethod
+    def _from_dict(d):
+        r = AutomationRule(user_id=d["user_id"], name=d["name"])
+        r.id = d["id"]
+        r.trigger_type = d.get("trigger_type", "pomodoro_count")
+        r.trigger_value = d.get("trigger_value", "3")
+        r.action_type = d.get("action_type", "checkin_habit")
+        r.action_value = d.get("action_value", "")
+        r.is_active = d.get("is_active", True)
+        r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return r
+
+
+class JSONTimeBlockStorage(_JSONStorageBase):
+    def __init__(self, filepath="time_blocks.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, block: TimeBlock):
+        items = self._read_all()
+        d = block.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == block.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, target_date=None):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") != user_id:
+                continue
+            if target_date:
+                rd = date.fromisoformat(r["block_date"])
+                if rd != target_date:
+                    continue
+            result.append(self._from_dict(r))
+        result.sort(key=lambda x: x.start_time)
+        return result
+
+    def delete(self, block_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != block_id])
+
+    @staticmethod
+    def _from_dict(d):
+        b = TimeBlock(user_id=d["user_id"], block_date=date.fromisoformat(d["block_date"]),
+                      start_time=d["start_time"], end_time=d["end_time"])
+        b.id = d["id"]
+        b.title = d.get("title", "")
+        b.color = d.get("color", "#4f46e5")
+        b.category = d.get("category", "")
+        b.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return b

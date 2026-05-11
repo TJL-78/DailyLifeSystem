@@ -137,6 +137,17 @@ const I18N = {
     expense: '支出', income: '收入', amountPlaceholder: '金额',
     financeCategory: '选择分类', totalIncome: '总收入', totalExpense: '总支出',
     balance: '结余', expenseByCategory: '支出分类', financeHistory: '收支记录', noFinanceRecords: '暂无记录',
+    // Efficiency & Automation
+    efficiencySection: '效率自动化',
+    automationNav: '智能助手', automationTitle: '智能助手',
+    smartSuggestions: '智能建议', refreshSuggestions: '刷新建议', noSuggestions: '暂无建议',
+    automationRules: '自动化规则', ruleNamePh: '规则名称',
+    triggerPomodoro: '番茄钟完成数', triggerActivity: '活动完成数', triggerValuePh: '阈值',
+    actionCheckin: '自动打卡习惯', actionNotify: '发送提醒', actionValuePh: '动作参数',
+    selectHabit: '选择习惯', when: '当', noRules: '暂无规则',
+    enable: '启用', disable: '禁用', checkRulesNow: '立即检查规则',
+    addTimeBlock: '添加时间块', blockTitlePh: '时间块标题', timeBlock: '时间块',
+    focusModeLabel: '专注模式', focusModeMsg: '专注中，请勿打扰...', exitFocus: '退出专注',
   },
   en: {
     appTitle: 'Activity Manager', dashboard: 'Dashboard', allActivities: 'All Activities',
@@ -272,6 +283,17 @@ const I18N = {
     expense: 'Expense', income: 'Income', amountPlaceholder: 'Amount',
     financeCategory: 'Category', totalIncome: 'Total Income', totalExpense: 'Total Expense',
     balance: 'Balance', expenseByCategory: 'Expenses by Category', financeHistory: 'Records', noFinanceRecords: 'No records yet',
+    // Efficiency & Automation
+    efficiencySection: 'Efficiency',
+    automationNav: 'Smart Assistant', automationTitle: 'Smart Assistant',
+    smartSuggestions: 'Smart Suggestions', refreshSuggestions: 'Refresh', noSuggestions: 'No suggestions',
+    automationRules: 'Automation Rules', ruleNamePh: 'Rule name',
+    triggerPomodoro: 'Pomodoro count', triggerActivity: 'Activity completions', triggerValuePh: 'Threshold',
+    actionCheckin: 'Auto check-in habit', actionNotify: 'Send notification', actionValuePh: 'Action param',
+    selectHabit: 'Select habit', when: 'When', noRules: 'No rules yet',
+    enable: 'Enable', disable: 'Disable', checkRulesNow: 'Check Rules Now',
+    addTimeBlock: 'Add Time Block', blockTitlePh: 'Block title', timeBlock: 'Time Block',
+    focusModeLabel: 'Focus Mode', focusModeMsg: 'Stay focused, no distractions...', exitFocus: 'Exit Focus',
   }
 }
 

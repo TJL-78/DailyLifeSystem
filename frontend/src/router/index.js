@@ -19,6 +19,7 @@ import Sleep from '../views/Sleep.vue'
 import Mood from '../views/Mood.vue'
 import Health from '../views/Health.vue'
 import Finance from '../views/Finance.vue'
+import Automation from '../views/Automation.vue'
 
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard },
@@ -41,6 +42,7 @@ const routes = [
   { path: '/mood', name: 'mood', component: Mood },
   { path: '/health', name: 'health', component: Health },
   { path: '/finance', name: 'finance', component: Finance },
+  { path: '/automation', name: 'automation', component: Automation },
 ]
 
 export default createRouter({

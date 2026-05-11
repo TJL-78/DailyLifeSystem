@@ -60,6 +60,10 @@
       <router-link to="/finance" class="nav-item" :class="{ active: $route.name === 'finance' }">
         <span class="nav-icon">¥</span><span>{{ t('financeNav') }}</span>
       </router-link>
+      <div class="nav-section">{{ t('efficiencySection') }}</div>
+      <router-link to="/automation" class="nav-item" :class="{ active: $route.name === 'automation' }">
+        <span class="nav-icon">⚡</span><span>{{ t('automationNav') }}</span>
+      </router-link>
       <div class="nav-section">{{ t('categoryLabel') }}</div>
       <router-link v-for="cat in store.categories" :key="cat.id"
         :to="'/activities?category=' + cat.id" class="nav-item">

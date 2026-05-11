@@ -427,3 +427,48 @@ class FinanceRecord:
             "category": self.category, "note": self.note,
             "created_at": self.created_at.isoformat(),
         }
+
+
+@dataclass
+class AutomationRule:
+    """An automation rule that triggers actions based on conditions."""
+    user_id: str
+    name: str
+    trigger_type: str = "pomodoro_count"  # pomodoro_count, activity_complete, time_of_day
+    trigger_value: str = "3"
+    action_type: str = "checkin_habit"  # checkin_habit, create_activity, send_notification
+    action_value: str = ""
+    is_active: bool = True
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id, "name": self.name,
+            "trigger_type": self.trigger_type, "trigger_value": self.trigger_value,
+            "action_type": self.action_type, "action_value": self.action_value,
+            "is_active": self.is_active, "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class TimeBlock:
+    """A planned time block for the timeline."""
+    user_id: str
+    block_date: date
+    start_time: str
+    end_time: str
+    title: str = ""
+    color: str = "#4f46e5"
+    category: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id,
+            "block_date": self.block_date.isoformat(),
+            "start_time": self.start_time, "end_time": self.end_time,
+            "title": self.title, "color": self.color,
+            "category": self.category, "created_at": self.created_at.isoformat(),
+        }

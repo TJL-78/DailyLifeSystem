@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from .routers import auth, activities, categories, habits, journals, stats, pomodoro, goals, backup, dashboard, health
+from .routers import auth, activities, categories, habits, journals, stats, pomodoro, goals, backup, dashboard, health, automation
 from .deps import UPLOAD_DIR, JOURNAL_IMG_DIR
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ app.include_router(goals.router)
 app.include_router(backup.router)
 app.include_router(dashboard.router)
 app.include_router(health.router)
+app.include_router(automation.router)
 app.include_router(activities.template_router)
 app.include_router(activities.tag_router)
 
