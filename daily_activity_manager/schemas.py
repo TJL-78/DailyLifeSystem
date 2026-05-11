@@ -66,6 +66,7 @@ class ActivityCreateRequest(BaseModel):
     duration_minutes: Optional[int] = None
     tags: Optional[List[str]] = []
     recurrence: Optional[str] = "none"
+    recurrence_end_date: Optional[str] = None
     parent_id: Optional[str] = None
 
 

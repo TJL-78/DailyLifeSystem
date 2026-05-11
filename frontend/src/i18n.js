@@ -97,6 +97,17 @@ const I18N = {
     // Journal enhancements
     searchJournal: '搜索日志...', filterMonth: '筛选月份', allMonths: '全部月份',
     allWeather: '全部天气', allMood: '全部心情',
+    // Dashboard enhancements
+    todayOverview: '今日概览', quickActions: '快捷操作',
+    addActivityQuick: '添加活动', startPomodoroQuick: '开始番茄钟', writeJournalQuick: '写日志',
+    activeHabits: '活跃习惯', checkedToday: '今日已打卡', activeGoals: '进行中目标',
+    greeting: '你好',
+    // Recurring
+    recurringBadge: '重复', recurringGenerated: '已生成重复任务', noRecurring: '无重复任务',
+    // Pomodoro enhancements
+    customDuration: '自定义', breakTime: '休息中', breakComplete: '休息结束！',
+    startBreak: '开始休息', skipBreak: '跳过休息',
+    soundOption: '提示音', soundShort: '短提示音', soundLong: '长提示音', soundMelody: '旋律提示音',
   },
   en: {
     appTitle: 'Activity Manager', dashboard: 'Dashboard', allActivities: 'All Activities',
@@ -192,6 +203,17 @@ const I18N = {
     // Journal enhancements
     searchJournal: 'Search journals...', filterMonth: 'Filter month', allMonths: 'All months',
     allWeather: 'All weather', allMood: 'All moods',
+    // Dashboard enhancements
+    todayOverview: "Today's Overview", quickActions: 'Quick Actions',
+    addActivityQuick: 'Add Activity', startPomodoroQuick: 'Start Pomodoro', writeJournalQuick: 'Write Journal',
+    activeHabits: 'Active Habits', checkedToday: 'Checked', activeGoals: 'Active Goals',
+    greeting: 'Hello',
+    // Recurring
+    recurringBadge: 'Recurring', recurringGenerated: 'Recurring tasks generated', noRecurring: 'No recurring tasks',
+    // Pomodoro enhancements
+    customDuration: 'Custom', breakTime: 'Break Time', breakComplete: 'Break complete!',
+    startBreak: 'Start Break', skipBreak: 'Skip Break',
+    soundOption: 'Sound', soundShort: 'Short beep', soundLong: 'Long beep', soundMelody: 'Melody',
   }
 }
 

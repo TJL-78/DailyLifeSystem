@@ -12,6 +12,7 @@
         <span v-if="activity.duration_minutes">⏱ {{ activity.duration_minutes }}{{ t('minutes') }}</span>
         <span v-for="tag in activity.tags || []" :key="tag" class="badge badge-tag">#{{ tag }}</span>
         <span v-if="activity.parent_id" class="badge badge-sub">{{ t('subtask') }}</span>
+        <span v-if="activity.recurrence && activity.recurrence !== 'none'" class="badge badge-recur">{{ t('recurringBadge') }}: {{ t(activity.recurrence) }}</span>
       </div>
       <div v-if="showSubtasks && !activity.parent_id" class="subtask-section">
         <div v-for="s in subtasks" :key="s.id" class="subtask-item">
@@ -113,6 +114,7 @@ watch(() => props.activity.id, loadSubtasks)
 .badge-cat { background: #f3f4f6; color: #6b7085; }
 .badge-tag { background: #eef2ff; color: #4f46e5; font-size: 10px; }
 .badge-sub { background: #f5f3ff; color: #7c3aed; font-size: 10px; }
+.badge-recur { background: #fef3c7; color: #92400e; font-size: 10px; }
 .activity-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .activity-actions button { padding: 6px 12px; border: 1px solid #eef0f4; border-radius: 8px; cursor: pointer; font-size: 11px; background: #fff; color: #6b7085; font-weight: 500; transition: all 0.15s; }
 .activity-actions button:hover { background: #f8f9fc; color: #1a1a2e; }

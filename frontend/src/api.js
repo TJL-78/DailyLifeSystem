@@ -116,4 +116,10 @@ export default {
   // Backup
   exportAllData: () => json(`${API}/backup/export`),
   importData: (data) => post(`${API}/backup/import`, data),
+
+  // Dashboard
+  getDashboard: () => json(`${API}/dashboard`),
+
+  // Recurring
+  generateRecurring: () => post(`${API}/activities/generate-recurring`, {}),
 }

@@ -99,9 +99,63 @@ def create_activity(req: ActivityCreateRequest, request: Request, user_id: str =
         tags=req.tags or [],
         recurrence=RecurrenceType(req.recurrence or "none"),
         parent_id=req.parent_id,
+        recurrence_end_date=date.fromisoformat(req.recurrence_end_date) if req.recurrence_end_date else None,
     )
     activity_storage.save(activity)
     return activity.to_dict()
+
+
+@router.post("/generate-recurring")
+def generate_recurring(user_id: str = Depends(get_current_user_id)):
+    """Generate today's instances for recurring activities."""
+    today = date.today()
+    all_activities = activity_storage.get_by_user(user_id)
+
+    # Find recurring templates
+    recurring = [a for a in all_activities if a.recurrence != RecurrenceType.NONE]
+
+    # Check which titles already have an instance for today
+    today_titles = set()
+    for a in all_activities:
+        if a.scheduled_date == today:
+            today_titles.add(a.title)
+
+    created = []
+    for a in recurring:
+        # Skip if past end date
+        if a.recurrence_end_date and today > a.recurrence_end_date:
+            continue
+        # Skip if today's instance already exists
+        if a.title in today_titles:
+            continue
+        # Check recurrence match
+        if a.recurrence == RecurrenceType.DAILY:
+            pass  # always generate
+        elif a.recurrence == RecurrenceType.WEEKLY:
+            # Only generate on the same weekday as the original
+            if a.scheduled_date and a.scheduled_date.weekday() != today.weekday():
+                continue
+        elif a.recurrence == RecurrenceType.MONTHLY:
+            # Only generate on the same day of month
+            if a.scheduled_date and a.scheduled_date.day != today.day:
+                continue
+
+        new_activity = Activity(
+            title=a.title,
+            user_id=user_id,
+            description=a.description,
+            priority=a.priority,
+            category_id=a.category_id,
+            scheduled_date=today,
+            duration_minutes=a.duration_minutes,
+            tags=list(a.tags),
+            recurrence=a.recurrence,
+        )
+        activity_storage.save(new_activity)
+        today_titles.add(a.title)
+        created.append(new_activity.to_dict())
+
+    return created
 
 
 @router.get("/{activity_id}")
