@@ -242,3 +242,17 @@ a:hover { text-decoration: underline; }
 /* Categories dark mode */
 [data-theme="dark"] .cat-item { background: #22223a !important; border-color: #2a2a44 !important; }
 [data-theme="dark"] .cat-name { color: #e0e0e8 !important; }
+
+/* Report dark mode */
+[data-theme="dark"] .report-header { color: #9a9ab0 !important; }
+[data-theme="dark"] .report-card { background: #22223a !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .report-card h3 { color: #e0e0e8 !important; }
+[data-theme="dark"] .report-card p { color: #c0c0d0 !important; }
+[data-theme="dark"] .stat-item { background: #2a2a44 !important; }
+[data-theme="dark"] .stat-key { color: #9a9ab0 !important; }
+[data-theme="dark"] .stat-val { color: #e0e0e8 !important; }
+[data-theme="dark"] .recommendations li { color: #c0c0d0 !important; }
+[data-theme="dark"] .report-actions button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
+[data-theme="dark"] .btn-generate { background: #6366f1 !important; color: #fff !important; border-color: #6366f1 !important; }
+[data-theme="dark"] .report-tabs button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
+[data-theme="dark"] .report-tabs button.active { background: #6366f1 !important; color: #fff !important; border-color: #6366f1 !important; }

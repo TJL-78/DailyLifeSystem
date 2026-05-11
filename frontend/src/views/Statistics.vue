@@ -35,7 +35,7 @@
             <div class="week-bar bar-new" :style="{ height: barHeight(w.new_count) + 'px' }" :title="t('newAdded') + ': ' + w.new_count"></div>
             <div class="week-bar bar-done" :style="{ height: barHeight(w.completed_count) + 'px' }" :title="t('completedLabel') + ': ' + w.completed_count"></div>
           </div>
-          <span class="week-label">{{ t('weekLabel') }}{{ i + 1 }}</span>
+          <span class="week-label">{{ formatWeekLabel(w) }}</span>
         </div>
       </div>
       <div v-else class="empty">{{ t('noData') }}</div>
@@ -176,6 +176,14 @@ const categoryDetails = computed(() => {
 })
 
 function barHeight(v) { return Math.min(Math.max(v * 8, 4), 120) }
+
+function formatWeekLabel(w) {
+  if (w.week) {
+    const d = new Date(w.week)
+    return `${d.getMonth() + 1}/${d.getDate()}`
+  }
+  return ''
+}
 
 async function load() {
   detailed.value = await api.getDetailedStats() || {}
