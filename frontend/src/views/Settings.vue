@@ -3,6 +3,27 @@
     <h1 class="page-title">{{ t('settings') }}</h1>
 
     <div class="settings-card">
+      <h2 class="section-title">{{ t('darkMode') }}</h2>
+      <div class="toggle-row">
+        <span>{{ t('darkMode') }}</span>
+        <button :class="{ active: store.darkMode }" class="toggle-btn" @click="store.toggleDarkMode()">
+          {{ store.darkMode ? 'ON' : 'OFF' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h2 class="section-title">{{ t('enableNotifications') }}</h2>
+      <div class="toggle-row">
+        <span>{{ t('enableNotifications') }}</span>
+        <button :class="{ active: store.notificationsEnabled }" class="toggle-btn" @click="toggleNotifications">
+          {{ store.notificationsEnabled ? 'ON' : 'OFF' }}
+        </button>
+      </div>
+      <div v-if="notifMsg" class="msg">{{ notifMsg }}</div>
+    </div>
+
+    <div class="settings-card">
       <h2 class="section-title">{{ t('langSwitch') }}</h2>
       <div class="lang-row">
         <button :class="{ active: currentLang === 'zh' }" @click="switchLang('zh')">中文</button>
@@ -58,6 +79,18 @@
       <button class="btn-primary" @click="changePw">{{ t('changePwBtn') }}</button>
       <div v-if="pwMsg" class="msg">{{ pwMsg }}</div>
     </div>
+
+    <div class="settings-card">
+      <h2 class="section-title">{{ t('exportData') }}</h2>
+      <div class="backup-row">
+        <button class="btn-primary" @click="exportData">{{ t('exportData') }}</button>
+        <label class="btn-upload">
+          {{ t('importData') }}
+          <input type="file" accept=".json" @change="importData" hidden />
+        </label>
+      </div>
+      <div v-if="backupMsg" class="msg">{{ backupMsg }}</div>
+    </div>
   </div>
 </template>
 
@@ -73,6 +106,8 @@ const profile = ref({ display_name: '', email: '', phone: '' })
 const pw = ref({ old_password: '', new_password: '' })
 const profileMsg = ref('')
 const pwMsg = ref('')
+const notifMsg = ref('')
+const backupMsg = ref('')
 
 onMounted(() => {
   if (store.user) {
@@ -110,6 +145,39 @@ async function uploadAvatar(e) {
   await store.loadUser()
   e.target.value = ''
 }
+
+async function toggleNotifications() {
+  const ok = await store.requestNotificationPermission()
+  notifMsg.value = ok ? t('notificationsEnabled') : t('notificationsDenied')
+  setTimeout(() => notifMsg.value = '', 2000)
+}
+
+async function exportData() {
+  const data = await api.exportAllData()
+  if (!data) return
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'daily-life-backup.json'
+  a.click()
+  backupMsg.value = t('dataExported')
+  setTimeout(() => backupMsg.value = '', 2000)
+}
+
+async function importData(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  const text = await file.text()
+  try {
+    const data = JSON.parse(text)
+    await api.importData(data)
+    backupMsg.value = t('dataImported')
+    setTimeout(() => backupMsg.value = '', 2000)
+  } catch (err) {
+    backupMsg.value = 'Invalid JSON file'
+  }
+  e.target.value = ''
+}
 </script>
 
 <style scoped>
@@ -131,4 +199,8 @@ async function uploadAvatar(e) {
 .form-group input:focus { outline: none; border-color: #4f46e5; background: #fff; }
 .btn-primary { padding: 10px 24px; background: #4f46e5; color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .msg { margin-top: 10px; color: #10b981; font-size: 13px; font-weight: 600; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; }
+.toggle-btn { padding: 8px 20px; border: 1px solid #eef0f4; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: #6b7085; }
+.toggle-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.backup-row { display: flex; gap: 12px; }
 </style>

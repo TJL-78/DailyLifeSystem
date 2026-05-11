@@ -75,4 +75,39 @@ export default {
   getJournalComments: (id) => json(`${API}/journals/${id}/comments`),
   addJournalComment: (id, content) => post(`${API}/journals/${id}/comments`, { content }),
   deleteJournalComment: (id) => del(`${API}/journals/comments/${id}`),
+
+  // Pomodoro
+  getPomodoroSessions: (params = {}) => { const q = new URLSearchParams(params).toString(); return json(`${API}/pomodoro/sessions?${q}`) },
+  createPomodoroSession: (data) => post(`${API}/pomodoro/sessions`, data),
+  getPomodoroStats: (date) => json(`${API}/pomodoro/stats?date=${date}`),
+
+  // Goals
+  getGoals: () => json(`${API}/goals`),
+  createGoal: (data) => post(`${API}/goals`, data),
+  deleteGoal: (id) => del(`${API}/goals/${id}`),
+  getGoalProgress: (id) => json(`${API}/goals/${id}/progress`),
+  addGoalProgress: (id, data) => post(`${API}/goals/${id}/progress`, data),
+
+  // Heatmap
+  getHeatmapData: (year) => json(`${API}/stats/heatmap?year=${year}`),
+  getMonthlyReport: (year, month) => json(`${API}/stats/monthly?year=${year}&month=${month}`),
+
+  // Templates
+  getTemplates: () => json(`${API}/templates`),
+  createTemplate: (data) => post(`${API}/templates`, data),
+  deleteTemplate: (id) => del(`${API}/templates/${id}`),
+  useTemplate: (id) => post(`${API}/templates/${id}/use`, {}),
+
+  // Tags
+  getTags: () => json(`${API}/tags`),
+  updateTag: (id, data) => put(`${API}/tags/${id}`, data),
+  deleteTag: (id) => del(`${API}/tags/${id}`),
+
+  // Sharing
+  shareActivity: (id, data) => post(`${API}/activities/${id}/share`, data),
+  getActivityShares: (id) => json(`${API}/activities/${id}/shares`),
+
+  // Backup
+  exportAllData: () => json(`${API}/backup/export`),
+  importData: (data) => post(`${API}/backup/import`, data),
 }

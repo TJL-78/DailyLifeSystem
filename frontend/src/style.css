@@ -6,3 +6,61 @@ a:hover { text-decoration: underline; }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #e2e4ec; border-radius: 3px; }
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+[data-theme="dark"] body,
+[data-theme="dark"] { background: #1a1a2e; color: #e0e0e8; }
+[data-theme="dark"] .sidebar { background: #16162a; border-right-color: #2a2a44; }
+[data-theme="dark"] .sidebar-brand { border-bottom-color: #2a2a44; }
+[data-theme="dark"] .sidebar-brand h2 { color: #e0e0e8; }
+[data-theme="dark"] .nav-item { color: #9a9ab0; }
+[data-theme="dark"] .nav-item:hover { color: #e0e0e8; background: #22223a; }
+[data-theme="dark"] .nav-item.active,
+[data-theme="dark"] .nav-item.router-link-exact-active { color: #818cf8; background: #22223a; border-left-color: #818cf8; }
+[data-theme="dark"] .user-section { background: #16162a; border-top-color: #2a2a44; }
+[data-theme="dark"] .username { color: #e0e0e8; }
+[data-theme="dark"] .main-content { background: #1a1a2e; }
+[data-theme="dark"] .page-title,
+[data-theme="dark"] .section-title { color: #e0e0e8; }
+[data-theme="dark"] .settings-card,
+[data-theme="dark"] .add-card,
+[data-theme="dark"] .habit-card,
+[data-theme="dark"] .journal-card,
+[data-theme="dark"] .write-card,
+[data-theme="dark"] .chart-section,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .template-card,
+[data-theme="dark"] .tag-card,
+[data-theme="dark"] .goal-card,
+[data-theme="dark"] .timer-card,
+[data-theme="dark"] .history-section,
+[data-theme="dark"] .heatmap-card,
+[data-theme="dark"] .report-card,
+[data-theme="dark"] .activity-item,
+[data-theme="dark"] .kanban-card { background: #22223a; border-color: #2a2a44; color: #e0e0e8; }
+[data-theme="dark"] .kanban-column { background: #16162a; }
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea { background: #2a2a44; border-color: #3a3a54; color: #e0e0e8; }
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus { border-color: #818cf8; background: #2a2a44; }
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-export { background: #2a2a44; border-color: #3a3a54; color: #c0c0d0; }
+[data-theme="dark"] .habit-name,
+[data-theme="dark"] .goal-name,
+[data-theme="dark"] .template-name,
+[data-theme="dark"] .tag-name,
+[data-theme="dark"] .activity-title,
+[data-theme="dark"] .journal-date,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .column-title,
+[data-theme="dark"] .year-label { color: #e0e0e8; }
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] .time-display { color: #818cf8; }
+[data-theme="dark"] .btn-primary { background: #6366f1; }
+[data-theme="dark"] .lang-row button { background: #2a2a44; border-color: #3a3a54; color: #9a9ab0; }
+[data-theme="dark"] .lang-row button.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #3a3a54; }

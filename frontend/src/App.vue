@@ -14,6 +14,7 @@ import Sidebar from './components/Sidebar.vue'
 
 const store = useAppStore()
 onMounted(async () => {
+  store.initTheme()
   await store.loadUser()
   await store.loadCategories()
 })

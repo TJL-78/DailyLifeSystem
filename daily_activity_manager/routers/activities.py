@@ -1,13 +1,14 @@
 """Activity routes for FastAPI."""
 
 from datetime import date, time, datetime
+from typing import List
 
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
 
-from ..schemas import ActivityCreateRequest, ActivityUpdateRequest
-from ..deps import get_current_user_id, activity_storage
-from ..models import Activity, ActivityPriority, RecurrenceType
+from ..schemas import ActivityCreateRequest, ActivityUpdateRequest, TemplateCreateRequest, TagUpdateRequest, ReorderRequest, ShareActivityRequest
+from ..deps import get_current_user_id, activity_storage, template_storage, shared_activity_storage, user_storage
+from ..models import Activity, ActivityPriority, RecurrenceType, ActivityTemplate, SharedActivity
 
 router = APIRouter(prefix="/api/activities", tags=["activities"])
 
@@ -36,6 +37,35 @@ def calendar_activities(request: Request, start: str = None, end: str = None, us
         if d and start_date <= d <= end_date:
             results.append(a)
     return [a.to_dict() for a in results]
+
+
+# --- Feature 9: Drag & Sort (Reorder) --- must be before /{activity_id}
+
+@router.put("/reorder")
+def reorder_activities(req: ReorderRequest, user_id: str = Depends(get_current_user_id)):
+    for idx, aid in enumerate(req.activity_ids):
+        activity = activity_storage.get(aid)
+        if activity and activity.user_id == user_id:
+            activity.sort_order = idx
+            activity.updated_at = datetime.now()
+            activity_storage.save(activity)
+    return {"message": "reordered"}
+
+
+# --- Feature 11: shared list --- must be before /{activity_id}
+
+@router.get("/shared")
+def list_shared_activities(user_id: str = Depends(get_current_user_id)):
+    shared_records = shared_activity_storage.get_shared_with_user(user_id)
+    results = []
+    for s in shared_records:
+        activity = activity_storage.get(s.activity_id)
+        if activity:
+            d = activity.to_dict()
+            d["shared_permission"] = s.permission
+            d["shared_by"] = s.owner_id
+            results.append(d)
+    return results
 
 
 @router.get("")
@@ -180,3 +210,144 @@ def create_subtask(activity_id: str, req: ActivityCreateRequest, user_id: str = 
     )
     activity_storage.save(subtask)
     return subtask.to_dict()
+
+
+# --- Feature 5: Activity Templates ---
+
+template_router = APIRouter(prefix="/api/templates", tags=["templates"])
+
+
+@template_router.post("", status_code=201)
+def create_template(req: TemplateCreateRequest, user_id: str = Depends(get_current_user_id)):
+    if not req.title:
+        return JSONResponse({"error": "title is required"}, status_code=400)
+    template = ActivityTemplate(
+        title=req.title,
+        user_id=user_id,
+        description=req.description or "",
+        priority=req.priority or "medium",
+        category_id=req.category_id,
+        duration_minutes=req.duration_minutes,
+        tags=req.tags or [],
+    )
+    template_storage.save(template)
+    return template.to_dict()
+
+
+@template_router.get("")
+def list_templates(user_id: str = Depends(get_current_user_id)):
+    templates = template_storage.get_by_user(user_id)
+    return [t.to_dict() for t in templates]
+
+
+@template_router.delete("/{template_id}")
+def delete_template(template_id: str, user_id: str = Depends(get_current_user_id)):
+    template = template_storage.get(template_id)
+    if not template or template.user_id != user_id:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    template_storage.delete(template_id)
+    return {"message": "deleted"}
+
+
+@template_router.post("/{template_id}/use", status_code=201)
+def use_template(template_id: str, user_id: str = Depends(get_current_user_id)):
+    template = template_storage.get(template_id)
+    if not template or template.user_id != user_id:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    activity = Activity(
+        title=template.title,
+        user_id=user_id,
+        description=template.description,
+        priority=ActivityPriority(template.priority or "medium"),
+        category_id=template.category_id,
+        duration_minutes=template.duration_minutes,
+        tags=list(template.tags),
+    )
+    activity_storage.save(activity)
+    return activity.to_dict()
+
+
+# --- Feature 6: Tag Management ---
+
+tag_router = APIRouter(prefix="/api/tags", tags=["tags"])
+
+
+@tag_router.get("")
+def list_tags(user_id: str = Depends(get_current_user_id)):
+    activities = activity_storage.get_by_user(user_id)
+    tag_counts: dict = {}
+    for a in activities:
+        for t in a.tags:
+            tag_counts[t] = tag_counts.get(t, 0) + 1
+    return [{"name": name, "count": count} for name, count in sorted(tag_counts.items())]
+
+
+@tag_router.put("/{tag_name}")
+def update_tag(tag_name: str, req: TagUpdateRequest, user_id: str = Depends(get_current_user_id)):
+    activities = activity_storage.get_by_user(user_id)
+    found = False
+    for a in activities:
+        if tag_name in a.tags:
+            found = True
+            if req.new_name:
+                a.tags = [req.new_name if t == tag_name else t for t in a.tags]
+                a.updated_at = datetime.now()
+                activity_storage.save(a)
+    if not found:
+        return JSONResponse({"error": "tag not found"}, status_code=404)
+    return {"message": "updated"}
+
+
+@tag_router.delete("/{tag_name}")
+def delete_tag(tag_name: str, user_id: str = Depends(get_current_user_id)):
+    activities = activity_storage.get_by_user(user_id)
+    found = False
+    for a in activities:
+        if tag_name in a.tags:
+            found = True
+            a.tags = [t for t in a.tags if t != tag_name]
+            a.updated_at = datetime.now()
+            activity_storage.save(a)
+    if not found:
+        return JSONResponse({"error": "tag not found"}, status_code=404)
+    return {"message": "deleted"}
+
+
+# --- Feature 11: Share/Unshare (path param endpoints) ---
+
+@router.post("/{activity_id}/share")
+def share_activity(activity_id: str, req: ShareActivityRequest, user_id: str = Depends(get_current_user_id)):
+    activity = activity_storage.get(activity_id)
+    if not activity or activity.user_id != user_id:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if req.permission not in ("view", "edit"):
+        return JSONResponse({"error": "permission must be 'view' or 'edit'"}, status_code=400)
+    target_user = user_storage.get_by_username(req.username)
+    if not target_user:
+        return JSONResponse({"error": "user not found"}, status_code=404)
+    if target_user.id == user_id:
+        return JSONResponse({"error": "cannot share with yourself"}, status_code=400)
+    existing = shared_activity_storage.find(activity_id, target_user.id)
+    if existing:
+        existing.permission = req.permission
+        shared_activity_storage.save(existing)
+        return existing.to_dict()
+    shared = SharedActivity(
+        activity_id=activity_id,
+        owner_id=user_id,
+        shared_with_id=target_user.id,
+        permission=req.permission,
+    )
+    shared_activity_storage.save(shared)
+    return shared.to_dict()
+
+
+@router.delete("/{activity_id}/share/{target_user_id}")
+def unshare_activity(activity_id: str, target_user_id: str, user_id: str = Depends(get_current_user_id)):
+    activity = activity_storage.get(activity_id)
+    if not activity or activity.user_id != user_id:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    deleted = shared_activity_storage.delete(activity_id, target_user_id)
+    if not deleted:
+        return JSONResponse({"error": "share not found"}, status_code=404)
+    return {"message": "unshared"}

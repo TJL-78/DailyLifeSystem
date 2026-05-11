@@ -36,7 +36,7 @@ if _use_mysql:
     journal_comment_storage = MySQLJournalCommentStorage(_db)
 else:
     from .user_storage import JSONUserStorage
-    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage
+    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage, JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage
     user_storage = JSONUserStorage("users.json")
     category_storage = JSONCategoryStorage("categories.json")
     activity_storage = JSONActivityStorage("activities.json")
@@ -44,6 +44,11 @@ else:
     habit_record_storage = JSONHabitRecordStorage("habit_records.json")
     journal_storage = JSONJournalStorage("journals.json")
     journal_comment_storage = JSONJournalCommentStorage("journal_comments.json")
+    pomodoro_storage = JSONPomodoroStorage("pomodoro_sessions.json")
+    goal_storage = JSONGoalStorage("goals.json")
+    goal_progress_storage = JSONGoalProgressStorage("goal_progress.json")
+    template_storage = JSONTemplateStorage("templates.json")
+    shared_activity_storage = JSONSharedActivityStorage("shared_activities.json")
 
 
 def get_current_user_id(request: Request) -> str:

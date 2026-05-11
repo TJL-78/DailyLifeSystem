@@ -4,7 +4,7 @@ import json
 import os
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity
 
 
 class JSONCategoryStorage:
@@ -414,3 +414,316 @@ class JSONJournalCommentStorage:
     def delete_by_journal(self, journal_id: str):
         items = self._read_all()
         self._write_all([c for c in items if c["journal_id"] != journal_id])
+
+
+class JSONPomodoroStorage:
+    """JSON storage for pomodoro sessions."""
+
+    def __init__(self, filepath: str = "pomodoro_sessions.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, session: PomodoroSession):
+        items = self._read_all()
+        d = session.to_dict()
+        for i, s in enumerate(items):
+            if s["id"] == session.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get(self, session_id: str) -> Optional[PomodoroSession]:
+        for s in self._read_all():
+            if s["id"] == session_id:
+                return self._from_dict(s)
+        return None
+
+    def get_by_user(self, user_id: str, filter_date: date = None) -> List[PomodoroSession]:
+        result = []
+        for s in self._read_all():
+            if s.get("user_id") != user_id:
+                continue
+            if filter_date:
+                st = datetime.fromisoformat(s["start_time"]).date()
+                if st != filter_date:
+                    continue
+            result.append(self._from_dict(s))
+        result.sort(key=lambda x: x.start_time, reverse=True)
+        return result
+
+    @staticmethod
+    def _from_dict(d: dict) -> PomodoroSession:
+        s = PomodoroSession(
+            user_id=d["user_id"],
+            duration=d.get("duration", 25),
+            activity_id=d.get("activity_id"),
+            label=d.get("label"),
+            status=d.get("status", "active"),
+        )
+        s.id = d["id"]
+        s.start_time = datetime.fromisoformat(d["start_time"]) if d.get("start_time") else datetime.now()
+        s.end_time = datetime.fromisoformat(d["end_time"]) if d.get("end_time") else None
+        s.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return s
+
+
+class JSONGoalStorage:
+    """JSON storage for goals."""
+
+    def __init__(self, filepath: str = "goals.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, goal: Goal):
+        items = self._read_all()
+        d = goal.to_dict()
+        for i, g in enumerate(items):
+            if g["id"] == goal.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get(self, goal_id: str) -> Optional[Goal]:
+        for g in self._read_all():
+            if g["id"] == goal_id:
+                return self._from_dict(g)
+        return None
+
+    def get_by_user(self, user_id: str) -> List[Goal]:
+        result = []
+        for g in self._read_all():
+            if g.get("user_id") == user_id:
+                result.append(self._from_dict(g))
+        result.sort(key=lambda x: x.created_at, reverse=True)
+        return result
+
+    def delete(self, goal_id: str) -> bool:
+        items = self._read_all()
+        filtered = [g for g in items if g["id"] != goal_id]
+        if len(filtered) == len(items):
+            return False
+        self._write_all(filtered)
+        return True
+
+    @staticmethod
+    def _from_dict(d: dict) -> Goal:
+        g = Goal(
+            title=d["title"],
+            user_id=d["user_id"],
+            description=d.get("description", ""),
+            target_value=d.get("target_value", 1),
+            unit=d.get("unit", ""),
+            period=d.get("period", "weekly"),
+            category_id=d.get("category_id"),
+        )
+        g.id = d["id"]
+        if d.get("start_date"):
+            g.start_date = date.fromisoformat(d["start_date"])
+        if d.get("end_date"):
+            g.end_date = date.fromisoformat(d["end_date"])
+        g.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        g.updated_at = datetime.fromisoformat(d["updated_at"]) if d.get("updated_at") else datetime.now()
+        return g
+
+
+class JSONGoalProgressStorage:
+    """JSON storage for goal progress entries."""
+
+    def __init__(self, filepath: str = "goal_progress.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, progress: GoalProgress):
+        items = self._read_all()
+        d = progress.to_dict()
+        for i, p in enumerate(items):
+            if p["id"] == progress.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_goal(self, goal_id: str) -> List[GoalProgress]:
+        result = []
+        for p in self._read_all():
+            if p["goal_id"] == goal_id:
+                gp = GoalProgress(
+                    goal_id=p["goal_id"],
+                    value=p.get("value", 0),
+                    note=p.get("note", ""),
+                    progress_date=date.fromisoformat(p["progress_date"]) if p.get("progress_date") else date.today(),
+                )
+                gp.id = p["id"]
+                gp.created_at = datetime.fromisoformat(p["created_at"]) if p.get("created_at") else datetime.now()
+                result.append(gp)
+        result.sort(key=lambda x: x.progress_date, reverse=True)
+        return result
+
+    def delete_by_goal(self, goal_id: str):
+        items = self._read_all()
+        self._write_all([p for p in items if p["goal_id"] != goal_id])
+
+
+class JSONTemplateStorage:
+    """JSON storage for activity templates."""
+
+    def __init__(self, filepath: str = "templates.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, template: ActivityTemplate):
+        items = self._read_all()
+        d = template.to_dict()
+        for i, t in enumerate(items):
+            if t["id"] == template.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get(self, template_id: str) -> Optional[ActivityTemplate]:
+        for t in self._read_all():
+            if t["id"] == template_id:
+                return self._from_dict(t)
+        return None
+
+    def get_by_user(self, user_id: str) -> List[ActivityTemplate]:
+        result = []
+        for t in self._read_all():
+            if t.get("user_id") == user_id:
+                result.append(self._from_dict(t))
+        result.sort(key=lambda x: x.created_at, reverse=True)
+        return result
+
+    def delete(self, template_id: str) -> bool:
+        items = self._read_all()
+        filtered = [t for t in items if t["id"] != template_id]
+        if len(filtered) == len(items):
+            return False
+        self._write_all(filtered)
+        return True
+
+    @staticmethod
+    def _from_dict(d: dict) -> ActivityTemplate:
+        t = ActivityTemplate(
+            title=d["title"],
+            user_id=d["user_id"],
+            description=d.get("description", ""),
+            priority=d.get("priority", "medium"),
+            category_id=d.get("category_id"),
+            duration_minutes=d.get("duration_minutes"),
+            tags=d.get("tags", []),
+        )
+        t.id = d["id"]
+        t.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return t
+
+
+class JSONSharedActivityStorage:
+    """JSON storage for shared activity records."""
+
+    def __init__(self, filepath: str = "shared_activities.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def _read_all(self) -> List[dict]:
+        with open(self.filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _write_all(self, data: List[dict]):
+        with open(self.filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def save(self, shared: SharedActivity):
+        items = self._read_all()
+        d = shared.to_dict()
+        for i, s in enumerate(items):
+            if s["id"] == shared.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_activity(self, activity_id: str) -> List[SharedActivity]:
+        result = []
+        for s in self._read_all():
+            if s["activity_id"] == activity_id:
+                result.append(self._from_dict(s))
+        return result
+
+    def get_shared_with_user(self, user_id: str) -> List[SharedActivity]:
+        result = []
+        for s in self._read_all():
+            if s["shared_with_id"] == user_id:
+                result.append(self._from_dict(s))
+        return result
+
+    def delete(self, activity_id: str, shared_with_id: str) -> bool:
+        items = self._read_all()
+        filtered = [s for s in items if not (s["activity_id"] == activity_id and s["shared_with_id"] == shared_with_id)]
+        if len(filtered) == len(items):
+            return False
+        self._write_all(filtered)
+        return True
+
+    def find(self, activity_id: str, shared_with_id: str) -> Optional[SharedActivity]:
+        for s in self._read_all():
+            if s["activity_id"] == activity_id and s["shared_with_id"] == shared_with_id:
+                return self._from_dict(s)
+        return None
+
+    @staticmethod
+    def _from_dict(d: dict) -> SharedActivity:
+        s = SharedActivity(
+            activity_id=d["activity_id"],
+            owner_id=d["owner_id"],
+            shared_with_id=d["shared_with_id"],
+            permission=d.get("permission", "view"),
+        )
+        s.id = d["id"]
+        s.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return s

@@ -14,9 +14,28 @@ from ..models import Journal, JournalComment
 router = APIRouter(prefix="/api/journals", tags=["journals"])
 
 
-@router.get("")
-def list_journals(user_id: str = Depends(get_current_user_id)):
+@router.get("/search")
+def search_journals(q: str = "", user_id: str = Depends(get_current_user_id)):
+    q = q.strip()
+    if not q:
+        return []
     journals = journal_storage.get_by_user(user_id)
+    q_lower = q.lower()
+    results = [j for j in journals if q_lower in j.content.lower()]
+    return [j.to_dict() for j in results]
+
+
+@router.get("")
+def list_journals(mood: str = None, weather: str = None, month: str = None,
+                  user_id: str = Depends(get_current_user_id)):
+    journals = journal_storage.get_by_user(user_id)
+    if mood:
+        journals = [j for j in journals if j.mood == mood]
+    if weather:
+        journals = [j for j in journals if j.weather == weather]
+    if month:
+        # month format: "2026-05"
+        journals = [j for j in journals if j.journal_date.isoformat()[:7] == month]
     return [j.to_dict() for j in journals]
 
 

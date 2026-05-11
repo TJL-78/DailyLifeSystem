@@ -23,6 +23,24 @@
       <router-link to="/statistics" class="nav-item" :class="{ active: $route.name === 'statistics' }">
         <span class="nav-icon">▲</span><span>{{ t('statistics') }}</span>
       </router-link>
+      <router-link to="/pomodoro" class="nav-item" :class="{ active: $route.name === 'pomodoro' }">
+        <span class="nav-icon">⏱</span><span>{{ t('pomodoroTitle') }}</span>
+      </router-link>
+      <router-link to="/goals" class="nav-item" :class="{ active: $route.name === 'goals' }">
+        <span class="nav-icon">◎</span><span>{{ t('goalsNav') }}</span>
+      </router-link>
+      <router-link to="/heatmap" class="nav-item" :class="{ active: $route.name === 'heatmap' }">
+        <span class="nav-icon">▦</span><span>{{ t('heatmapNav') }}</span>
+      </router-link>
+      <router-link to="/kanban" class="nav-item" :class="{ active: $route.name === 'kanban' }">
+        <span class="nav-icon">▧</span><span>{{ t('kanbanNav') }}</span>
+      </router-link>
+      <router-link to="/templates" class="nav-item" :class="{ active: $route.name === 'templates' }">
+        <span class="nav-icon">❐</span><span>{{ t('templatesNav') }}</span>
+      </router-link>
+      <router-link to="/tags" class="nav-item" :class="{ active: $route.name === 'tags' }">
+        <span class="nav-icon">#</span><span>{{ t('tagsNav') }}</span>
+      </router-link>
       <div class="nav-section">{{ t('categoryLabel') }}</div>
       <router-link v-for="cat in store.categories" :key="cat.id"
         :to="'/activities?category=' + cat.id" class="nav-item">

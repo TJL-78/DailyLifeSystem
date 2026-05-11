@@ -55,6 +55,44 @@ const I18N = {
     clickUploadImages: '点击上传图片（最多9张）',
     commentPlaceholder: '写评论...', sendComment: '发送',
     clearJournal: '一键清空', confirmClearJournal: '确定清空所有内容、天气、心情和图片吗？',
+    // Pomodoro
+    pomodoroTitle: '番茄钟', focusTimer: '专注计时', startTimer: '开始',
+    pauseTimer: '暂停', resetTimer: '重置', sessionComplete: '专注完成！',
+    todayFocus: '今日专注', sessions: '次', totalMinutes: '总分钟',
+    selectActivity: '关联活动（可选）', noActivity: '不关联', pomodoroHistory: '今日记录',
+    // Goals
+    goalsTitle: '目标管理', goalsNav: '目标', addGoal: '添加目标',
+    goalTitle: '目标标题', targetValue: '目标值', goalUnit: '单位',
+    goalPeriod: '周期', goalWeekly: '每周', goalMonthly: '每月', goalYearly: '每年',
+    currentProgress: '当前进度', addProgress: '添加进度', progressValue: '进度值',
+    noGoals: '暂无目标', confirmDeleteGoal: '确定删除此目标？',
+    // Heatmap
+    heatmapTitle: '年度热力图', heatmapNav: '热力图', monthlyReport: '月度报告',
+    activitiesCount: '活动数', lessActive: '少', moreActive: '多',
+    // Templates
+    templatesTitle: '活动模板', templatesNav: '模板', useTemplate: '使用模板',
+    saveAsTemplate: '存为模板', noTemplates: '暂无模板', confirmDeleteTemplate: '确定删除此模板？',
+    templateSaved: '模板已保存', templateUsed: '已从模板创建活动',
+    // Tags
+    tagsTitle: '标签管理', tagsNav: '标签', tagUsageCount: '使用次数',
+    renameTag: '重命名', tagColor: '颜色', noTags: '暂无标签',
+    confirmDeleteTag: '确定删除此标签？将从所有活动中移除',
+    // Notifications
+    enableNotifications: '启用通知', notificationsEnabled: '通知已启用',
+    notificationsDenied: '通知权限被拒绝',
+    // Dark mode
+    darkMode: '深色模式',
+    // Kanban
+    kanbanTitle: '看板视图', kanbanNav: '看板',
+    // Backup
+    exportData: '导出全部数据', importData: '导入数据',
+    dataExported: '数据已导出', dataImported: '数据已导入',
+    // Sharing
+    shareActivity: '分享', shareUsername: '用户名', sharePermission: '权限',
+    shareRead: '只读', shareEdit: '可编辑', shared: '已分享',
+    // Journal enhancements
+    searchJournal: '搜索日志...', filterMonth: '筛选月份', allMonths: '全部月份',
+    allWeather: '全部天气', allMood: '全部心情',
   },
   en: {
     appTitle: 'Activity Manager', dashboard: 'Dashboard', allActivities: 'All Activities',
@@ -108,6 +146,44 @@ const I18N = {
     clickUploadImages: 'Click to upload images (max 9)',
     commentPlaceholder: 'Write a comment...', sendComment: 'Send',
     clearJournal: 'Clear All', confirmClearJournal: 'Clear all content, weather, mood and images?',
+    // Pomodoro
+    pomodoroTitle: 'Pomodoro', focusTimer: 'Focus Timer', startTimer: 'Start',
+    pauseTimer: 'Pause', resetTimer: 'Reset', sessionComplete: 'Session complete!',
+    todayFocus: "Today's Focus", sessions: 'sessions', totalMinutes: 'total min',
+    selectActivity: 'Link activity (optional)', noActivity: 'None', pomodoroHistory: "Today's Sessions",
+    // Goals
+    goalsTitle: 'Goals', goalsNav: 'Goals', addGoal: 'Add Goal',
+    goalTitle: 'Goal title', targetValue: 'Target value', goalUnit: 'Unit',
+    goalPeriod: 'Period', goalWeekly: 'Weekly', goalMonthly: 'Monthly', goalYearly: 'Yearly',
+    currentProgress: 'Current Progress', addProgress: 'Add Progress', progressValue: 'Value',
+    noGoals: 'No goals yet', confirmDeleteGoal: 'Delete this goal?',
+    // Heatmap
+    heatmapTitle: 'Annual Heatmap', heatmapNav: 'Heatmap', monthlyReport: 'Monthly Report',
+    activitiesCount: 'Activities', lessActive: 'Less', moreActive: 'More',
+    // Templates
+    templatesTitle: 'Activity Templates', templatesNav: 'Templates', useTemplate: 'Use Template',
+    saveAsTemplate: 'Save as Template', noTemplates: 'No templates yet', confirmDeleteTemplate: 'Delete this template?',
+    templateSaved: 'Template saved', templateUsed: 'Activity created from template',
+    // Tags
+    tagsTitle: 'Tag Management', tagsNav: 'Tags', tagUsageCount: 'Usage count',
+    renameTag: 'Rename', tagColor: 'Color', noTags: 'No tags yet',
+    confirmDeleteTag: 'Delete this tag? It will be removed from all activities',
+    // Notifications
+    enableNotifications: 'Enable Notifications', notificationsEnabled: 'Notifications enabled',
+    notificationsDenied: 'Notification permission denied',
+    // Dark mode
+    darkMode: 'Dark Mode',
+    // Kanban
+    kanbanTitle: 'Kanban Board', kanbanNav: 'Kanban',
+    // Backup
+    exportData: 'Export All Data', importData: 'Import Data',
+    dataExported: 'Data exported', dataImported: 'Data imported',
+    // Sharing
+    shareActivity: 'Share', shareUsername: 'Username', sharePermission: 'Permission',
+    shareRead: 'Read only', shareEdit: 'Can edit', shared: 'Shared',
+    // Journal enhancements
+    searchJournal: 'Search journals...', filterMonth: 'Filter month', allMonths: 'All months',
+    allWeather: 'All weather', allMood: 'All moods',
   }
 }
 

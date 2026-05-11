@@ -63,9 +63,12 @@
 
     <ul class="activity-list" v-if="filteredActivities.length">
       <ActivityItem v-for="a in filteredActivities" :key="a.id" :activity="a" :showSubtasks="true"
-        @toggle="toggleActivity" @start="startActivity" @cancel="cancelActivity" @delete="deleteActivity" />
+        @toggle="toggleActivity" @start="startActivity" @cancel="cancelActivity" @delete="deleteActivity"
+        @saveTemplate="saveAsTemplate" />
     </ul>
     <div v-else class="empty">{{ t('noMatch') }}</div>
+
+    <div v-if="templateMsg" class="save-msg">{{ templateMsg }}</div>
   </div>
 </template>
 
@@ -85,6 +88,7 @@ const filterStatus = ref('')
 const filterPriority = ref('')
 const filterCategory = ref('')
 const form = ref({ title: '', priority: 'medium', category_id: '', description: '', duration_minutes: null, scheduled_date: '', repeat: '', tagsStr: '' })
+const templateMsg = ref('')
 
 const filteredActivities = computed(() => {
   return activities.value.filter(a => {
@@ -128,6 +132,19 @@ async function startActivity(a) { await api.startActivity(a.id); await load() }
 async function cancelActivity(a) { await api.cancelActivity(a.id); await load() }
 async function deleteActivity(a) { if (!confirm(t('confirmDelete'))) return; await api.deleteActivity(a.id); await load() }
 
+async function saveAsTemplate(a) {
+  await api.createTemplate({
+    title: a.title,
+    description: a.description,
+    priority: a.priority,
+    category_id: a.category_id,
+    duration_minutes: a.duration_minutes,
+    tags: a.tags,
+  })
+  templateMsg.value = t('templateSaved')
+  setTimeout(() => templateMsg.value = '', 2000)
+}
+
 onMounted(load)
 </script>
 
@@ -151,4 +168,5 @@ onMounted(load)
 .filter-bar select { padding: 8px 14px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; background: #fff; }
 .activity-list { list-style: none; padding: 0; }
 .empty { color: #b0b4c8; font-size: 13px; padding: 40px 0; text-align: center; }
+.save-msg { margin-top: 10px; color: #10b981; font-size: 13px; font-weight: 600; }
 </style>

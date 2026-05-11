@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from .routers import auth, activities, categories, habits, journals, stats
+from .routers import auth, activities, categories, habits, journals, stats, pomodoro, goals, backup
 from .deps import UPLOAD_DIR, JOURNAL_IMG_DIR
 
 app = FastAPI(title="Daily Activity Management System")
@@ -26,6 +26,11 @@ app.include_router(categories.router)
 app.include_router(habits.router)
 app.include_router(journals.router)
 app.include_router(stats.router)
+app.include_router(pomodoro.router)
+app.include_router(goals.router)
+app.include_router(backup.router)
+app.include_router(activities.template_router)
+app.include_router(activities.tag_router)
 
 # Static file mounts
 _pkg_dir = os.path.dirname(os.path.abspath(__file__))

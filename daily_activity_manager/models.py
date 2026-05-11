@@ -205,3 +205,132 @@ class JournalComment:
             "content": self.content,
             "created_at": self.created_at.isoformat(),
         }
+
+
+@dataclass
+class PomodoroSession:
+    """A pomodoro/focus timer session."""
+    user_id: str
+    duration: int = 25
+    activity_id: Optional[str] = None
+    label: Optional[str] = None
+    status: str = "active"  # active, completed, cancelled
+    start_time: datetime = field(default_factory=datetime.now)
+    end_time: Optional[datetime] = None
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "duration": self.duration,
+            "activity_id": self.activity_id,
+            "label": self.label,
+            "status": self.status,
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat() if self.end_time else None,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class Goal:
+    """A goal to track progress toward."""
+    title: str
+    user_id: str
+    description: str = ""
+    target_value: int = 1
+    unit: str = ""
+    period: str = "weekly"  # weekly, monthly, yearly
+    category_id: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "user_id": self.user_id,
+            "description": self.description,
+            "target_value": self.target_value,
+            "unit": self.unit,
+            "period": self.period,
+            "category_id": self.category_id,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass
+class GoalProgress:
+    """A progress entry for a goal."""
+    goal_id: str
+    value: int = 0
+    note: str = ""
+    progress_date: date = field(default_factory=date.today)
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "goal_id": self.goal_id,
+            "value": self.value,
+            "note": self.note,
+            "progress_date": self.progress_date.isoformat(),
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class ActivityTemplate:
+    """A reusable activity template."""
+    title: str
+    user_id: str
+    description: str = ""
+    priority: Optional[str] = "medium"
+    category_id: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    tags: List[str] = field(default_factory=list)
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "user_id": self.user_id,
+            "description": self.description,
+            "priority": self.priority,
+            "category_id": self.category_id,
+            "duration_minutes": self.duration_minutes,
+            "tags": self.tags,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class SharedActivity:
+    """A record of sharing an activity with another user."""
+    activity_id: str
+    owner_id: str
+    shared_with_id: str
+    permission: str = "view"  # "view" or "edit"
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "activity_id": self.activity_id,
+            "owner_id": self.owner_id,
+            "shared_with_id": self.shared_with_id,
+            "permission": self.permission,
+            "created_at": self.created_at.isoformat(),
+        }

@@ -28,7 +28,18 @@
     <div class="activity-actions">
       <button v-if="activity.status === 'pending'" @click="$emit('start', activity)">{{ t('start') }}</button>
       <button v-if="activity.status !== 'completed' && activity.status !== 'cancelled'" @click="$emit('cancel', activity)">{{ t('cancel') }}</button>
+      <button @click="$emit('saveTemplate', activity)">{{ t('saveAsTemplate') }}</button>
+      <button @click="showShare = !showShare">{{ t('shareActivity') }}</button>
       <button class="btn-del" @click="$emit('delete', activity)">{{ t('delete') }}</button>
+    </div>
+    <div v-if="activity.shared" class="shared-badge">{{ t('shared') }}</div>
+    <div v-if="showShare" class="share-panel">
+      <input v-model="shareUsername" :placeholder="t('shareUsername')" />
+      <select v-model="sharePermission">
+        <option value="read">{{ t('shareRead') }}</option>
+        <option value="edit">{{ t('shareEdit') }}</option>
+      </select>
+      <button class="btn-share" @click="doShare">{{ t('shareActivity') }}</button>
     </div>
   </li>
 </template>
@@ -43,12 +54,15 @@ const props = defineProps({
   activity: Object,
   showSubtasks: { type: Boolean, default: false }
 })
-const emit = defineEmits(['toggle', 'start', 'cancel', 'delete', 'toggleSub', 'deleteSub', 'addSubtask'])
+const emit = defineEmits(['toggle', 'start', 'cancel', 'delete', 'toggleSub', 'deleteSub', 'addSubtask', 'saveTemplate'])
 
 const { t } = useI18n()
 const store = useAppStore()
 const subtasks = ref([])
 const newSubtask = ref('')
+const showShare = ref(false)
+const shareUsername = ref('')
+const sharePermission = ref('read')
 
 const priorityLabels = { low: 'low', medium: 'medium', high: 'high', urgent: 'urgent' }
 const priorityLabel = computed(() => t(priorityLabels[props.activity.priority] || 'medium'))
@@ -68,6 +82,13 @@ async function addSub() {
   await api.createSubtask(props.activity.id, { title: newSubtask.value.trim() })
   newSubtask.value = ''
   await loadSubtasks()
+}
+
+async function doShare() {
+  if (!shareUsername.value.trim()) return
+  await api.shareActivity(props.activity.id, { username: shareUsername.value, permission: sharePermission.value })
+  shareUsername.value = ''
+  showShare.value = false
 }
 
 onMounted(loadSubtasks)
@@ -106,4 +127,10 @@ watch(() => props.activity.id, loadSubtasks)
 .subtask-add input { padding: 7px 12px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; flex: 1; background: #fafbfd; }
 .subtask-add input:focus { outline: none; border-color: #4f46e5; background: #fff; }
 .subtask-add button { padding: 7px 14px; border: none; background: #4f46e5; color: #fff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.shared-badge { display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 10px; font-weight: 600; background: #ecfdf5; color: #059669; margin-top: 6px; }
+.share-panel { display: flex; gap: 6px; margin-top: 8px; padding: 10px; background: #fafbfd; border-radius: 8px; border: 1px solid #eef0f4; }
+.share-panel input { padding: 7px 12px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; flex: 1; background: #fff; }
+.share-panel input:focus { outline: none; border-color: #4f46e5; }
+.share-panel select { padding: 7px 10px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; }
+.btn-share { padding: 7px 14px; border: none; background: #4f46e5; color: #fff; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
 </style>

@@ -121,3 +121,64 @@ class JournalUpdateRequest(BaseModel):
 
 class JournalCommentCreateRequest(BaseModel):
     content: str
+
+
+class PomodoroStartRequest(BaseModel):
+    activity_id: Optional[str] = None
+    duration: Optional[int] = 25
+    label: Optional[str] = None
+
+
+class GoalCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    target_value: int = 1
+    unit: str = ""
+    period: str = "weekly"
+    category_id: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+class GoalUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    target_value: Optional[int] = None
+    unit: Optional[str] = None
+    period: Optional[str] = None
+    category_id: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+class GoalProgressRequest(BaseModel):
+    value: int
+    note: Optional[str] = ""
+    date: Optional[str] = None
+
+
+class TemplateCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    priority: Optional[str] = "medium"
+    category_id: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    tags: Optional[List[str]] = []
+
+
+class TagUpdateRequest(BaseModel):
+    new_name: Optional[str] = None
+    color: Optional[str] = None
+
+
+class ReorderRequest(BaseModel):
+    activity_ids: List[str]
+
+
+class ShareActivityRequest(BaseModel):
+    username: str
+    permission: str = "view"
+
+
+class BackupImportRequest(BaseModel):
+    data: dict

@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
-from ..deps import get_current_user_id, activity_storage, category_storage, habit_storage
+from ..deps import get_current_user_id, activity_storage, category_storage, habit_storage, habit_record_storage, pomodoro_storage, journal_storage
 from ..models import ActivityStatus
 
 router = APIRouter(tags=["stats"])
@@ -102,3 +102,85 @@ def export_csv(user_id: str = Depends(get_current_user_id)):
     output.seek(0)
     return Response(content=output.getvalue(), media_type="text/csv; charset=utf-8-sig",
                     headers={"Content-Disposition": "attachment; filename=activities.csv"})
+
+
+@router.get("/api/stats/heatmap")
+def get_heatmap(year: int = None, user_id: str = Depends(get_current_user_id)):
+    if year is None:
+        year = date.today().year
+    dates = {}
+    # Count completed activities
+    all_acts = activity_storage.get_by_user(user_id)
+    for a in all_acts:
+        if a.completed_at and a.completed_at.year == year:
+            d = a.completed_at.date().isoformat()
+            dates[d] = dates.get(d, 0) + 1
+    # Count habit checkins
+    habits = habit_storage.get_by_user(user_id)
+    for h in habits:
+        start = date(year, 1, 1)
+        end = date(year, 12, 31)
+        records = habit_record_storage.get_by_habit(h.id, start, end)
+        for r in records:
+            d = r.record_date.isoformat()
+            dates[d] = dates.get(d, 0) + 1
+    return {"dates": dates}
+
+
+@router.get("/api/stats/monthly-report")
+def get_monthly_report(year: int, month: int, user_id: str = Depends(get_current_user_id)):
+    from calendar import monthrange
+    last_day = monthrange(year, month)[1]
+    month_start = date(year, month, 1)
+    month_end = date(year, month, last_day)
+
+    all_acts = activity_storage.get_by_user(user_id)
+    cats = category_storage.get_by_user(user_id)
+    cat_map = {c.id: c.name for c in cats}
+
+    # Filter activities for the month (by created_at or completed_at)
+    month_acts = [a for a in all_acts if a.created_at.date() >= month_start and a.created_at.date() <= month_end]
+    completed = [a for a in month_acts if a.status == ActivityStatus.COMPLETED]
+    total = len(month_acts)
+    completion_rate = round(len(completed) / total * 100, 1) if total > 0 else 0
+
+    # Most active category
+    cat_counts = {}
+    for a in month_acts:
+        cname = cat_map.get(a.category_id, "未分类") if a.category_id else "未分类"
+        cat_counts[cname] = cat_counts.get(cname, 0) + 1
+    most_active_category = max(cat_counts, key=cat_counts.get) if cat_counts else ""
+
+    # Focus minutes from pomodoro
+    all_sessions = pomodoro_storage.get_by_user(user_id)
+    focus_sessions = [s for s in all_sessions if s.status == "completed" and s.start_time.date() >= month_start and s.start_time.date() <= month_end]
+    total_focus_minutes = sum(s.duration for s in focus_sessions)
+
+    # Habits maintained
+    habits = habit_storage.get_by_user(user_id)
+    habits_maintained = 0
+    for h in habits:
+        records = habit_record_storage.get_by_habit(h.id, month_start, month_end)
+        if len(records) > 0:
+            habits_maintained += 1
+
+    # Journal count
+    journals = journal_storage.get_by_user(user_id)
+    journal_count = len([j for j in journals if j.journal_date >= month_start and j.journal_date <= month_end])
+
+    # Top activities by duration
+    top_activities = sorted(
+        [{"title": a.title, "duration": a.duration_minutes or 0} for a in completed if a.duration_minutes],
+        key=lambda x: x["duration"], reverse=True
+    )[:10]
+
+    return {
+        "total_activities": total,
+        "completed": len(completed),
+        "completion_rate": completion_rate,
+        "most_active_category": most_active_category,
+        "total_focus_minutes": total_focus_minutes,
+        "habits_maintained": habits_maintained,
+        "journal_count": journal_count,
+        "top_activities": top_activities,
+    }
