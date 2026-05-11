@@ -72,6 +72,7 @@ def get_detailed_stats(user_id: str = Depends(get_current_user_id)):
         "completed": len([a for a in all_acts if a.status == ActivityStatus.COMPLETED]),
         "pending": len([a for a in all_acts if a.status == ActivityStatus.PENDING]),
         "category_time": {ct["name"]: ct["total_minutes"] for ct in category_time.values()},
+        "category_time_detail": list(category_time.values()),
     }
 
 

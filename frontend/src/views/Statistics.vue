@@ -43,20 +43,30 @@
 
     <div class="chart-section">
       <h2 class="section-title">{{ t('catTimeTitle') }}</h2>
-      <div v-if="timeData.length" class="time-chart">
-        <svg viewBox="0 0 200 200" class="pie-svg">
-          <circle v-for="(s, i) in pieSlices" :key="i"
-            cx="100" cy="100" r="80"
-            fill="none" :stroke="s.color" stroke-width="30"
-            :stroke-dasharray="s.dash" :stroke-dashoffset="s.offset"
-          />
-        </svg>
-        <div class="time-legend">
-          <div v-for="d in timeData" :key="d.name" class="legend-item">
-            <span class="legend-dot" :style="{ background: d.color }"></span>
-            <span>{{ d.name }}: {{ d.minutes }}{{ t('minutes') }} ({{ d.pct }}%)</span>
+      <div v-if="categoryDetails.length" class="category-pies">
+        <div v-for="(cat, ci) in categoryDetails" :key="cat.name" class="cat-pie-card">
+          <div class="cat-pie-header">
+            <svg viewBox="0 0 120 120" class="cat-pie-svg">
+              <circle v-for="(s, si) in cat.slices" :key="si"
+                cx="60" cy="60" r="50"
+                fill="none" :stroke="s.color" stroke-width="20"
+                :stroke-dasharray="s.dash" :stroke-dashoffset="s.offset"
+              />
+            </svg>
+            <div class="cat-pie-info">
+              <div class="cat-pie-name" :style="{ color: cat.color }">{{ cat.name }}</div>
+              <div class="cat-pie-total">{{ cat.total_minutes }}{{ t('minutes') }}</div>
+              <div class="cat-pie-count">{{ cat.tasks.length }} {{ t('tasks') }}</div>
+            </div>
           </div>
-          <div class="legend-total">{{ t('totalTime2') }}: {{ totalMinutes }}{{ t('minutes') }}</div>
+          <div class="cat-task-list">
+            <div v-for="(task, ti) in cat.tasks" :key="ti" class="cat-task-item">
+              <span class="cat-task-dot" :style="{ background: taskColors[ti % taskColors.length] }"></span>
+              <span class="cat-task-title">{{ task.title }}</span>
+              <span class="cat-task-time">{{ task.minutes }}{{ t('minutes') }}</span>
+              <span class="cat-task-status" :class="'status-' + task.status">{{ t(task.status) || task.status }}</span>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else class="empty">{{ t('noTimeData') }}</div>
@@ -79,6 +89,7 @@ const { t } = useI18n()
 const store = useAppStore()
 const detailed = ref({})
 const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+const taskColors = ['#6366f1', '#14b8a6', '#f97316', '#e11d48', '#a855f7', '#0ea5e9', '#eab308', '#22c55e', '#f43f5e', '#8b5cf6']
 
 const totalTimeStr = computed(() => {
   const m = detailed.value.total_time || 0
@@ -95,23 +106,26 @@ const catData = computed(() => {
 
 const weeklyData = computed(() => detailed.value.weekly_trend || [])
 
-const timeData = computed(() => {
-  const ct = detailed.value.category_time || {}
-  const entries = Object.entries(ct).filter(([, v]) => v > 0)
-  const total = entries.reduce((s, [, v]) => s + v, 0)
-  return entries.map(([name, minutes], i) => ({ name: name || t('unclassified'), minutes, pct: Math.round((minutes / total) * 100), color: colors[i % colors.length] }))
-})
-
-const totalMinutes = computed(() => timeData.value.reduce((s, d) => s + d.minutes, 0))
-
-const pieSlices = computed(() => {
-  const circ = 2 * Math.PI * 80
-  let offset = 0
-  return timeData.value.map(d => {
-    const dash = (d.pct / 100) * circ
-    const slice = { color: d.color, dash: `${dash} ${circ - dash}`, offset: -offset + circ / 4 }
-    offset += dash
-    return slice
+const categoryDetails = computed(() => {
+  const details = detailed.value.category_time_detail || []
+  return details.map((cat, ci) => {
+    const circ = 2 * Math.PI * 50
+    const total = cat.total_minutes || 1
+    let offset = 0
+    const slices = cat.tasks.map((task, ti) => {
+      const pct = task.minutes / total
+      const dash = pct * circ
+      const slice = { color: taskColors[ti % taskColors.length], dash: `${dash} ${circ - dash}`, offset: -offset + circ / 4 }
+      offset += dash
+      return slice
+    })
+    return {
+      name: cat.name,
+      color: cat.color || colors[ci % colors.length],
+      total_minutes: cat.total_minutes,
+      tasks: cat.tasks,
+      slices,
+    }
   })
 })
 
@@ -168,14 +182,26 @@ onMounted(load)
 .bar-new { background: #4f46e5; }
 .bar-done { background: #10b981; }
 .week-label { font-size: 11px; color: #8b8fa8; margin-top: 6px; display: block; }
-.time-chart { display: flex; gap: 32px; align-items: center; }
-.pie-svg { width: 160px; height: 160px; flex-shrink: 0; }
-.time-legend { flex: 1; }
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3a3a4e; margin-bottom: 6px; }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.legend-total { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-top: 8px; }
 .export-section { display: flex; gap: 8px; }
 .btn-export { padding: 10px 24px; background: #fff; border: 1px solid #eef0f4; border-radius: 10px; font-size: 13px; font-weight: 600; color: #4f46e5; cursor: pointer; }
 .btn-export:hover { background: #f0f0ff; }
 .empty { color: #b0b4c8; font-size: 13px; padding: 20px 0; text-align: center; }
+.category-pies { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.cat-pie-card { background: #fafbfd; border: 1px solid #eef0f4; border-radius: 14px; padding: 20px; }
+.cat-pie-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.cat-pie-svg { width: 100px; height: 100px; flex-shrink: 0; }
+.cat-pie-info { flex: 1; }
+.cat-pie-name { font-size: 16px; font-weight: 700; }
+.cat-pie-total { font-size: 20px; font-weight: 800; color: #1a1a2e; margin-top: 2px; }
+.cat-pie-count { font-size: 12px; color: #8b8fa8; margin-top: 2px; }
+.cat-task-list { border-top: 1px solid #eef0f4; padding-top: 12px; }
+.cat-task-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+.cat-task-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cat-task-title { flex: 1; color: #3a3a4e; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cat-task-time { color: #6b7085; font-weight: 600; flex-shrink: 0; }
+.cat-task-status { padding: 1px 8px; border-radius: 100px; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+.status-completed { background: #ecfdf5; color: #059669; }
+.status-pending { background: #fffbeb; color: #d97706; }
+.status-in_progress { background: #eef2ff; color: #4f46e5; }
+.status-cancelled { background: #f3f4f6; color: #9ca3af; }
 </style>
