@@ -6,7 +6,7 @@ import fcntl
 import threading
 from typing import List, Optional
 from datetime import date, time, datetime
-from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity
+from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity, SleepRecord, MoodRecord, HealthRecord, FinanceRecord
 
 # Per-file threading locks to prevent concurrent access within the same process
 _file_locks = {}
@@ -685,3 +685,194 @@ class JSONSharedActivityStorage(_JSONStorageBase):
         s.id = d["id"]
         s.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
         return s
+
+
+class JSONSleepStorage(_JSONStorageBase):
+    def __init__(self, filepath="sleep_records.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, record: SleepRecord):
+        items = self._read_all()
+        d = record.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == record.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, start_date=None, end_date=None):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") != user_id:
+                continue
+            rd = date.fromisoformat(r["record_date"])
+            if start_date and rd < start_date:
+                continue
+            if end_date and rd > end_date:
+                continue
+            result.append(self._from_dict(r))
+        result.sort(key=lambda x: x.record_date, reverse=True)
+        return result
+
+    def delete(self, record_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != record_id])
+
+    @staticmethod
+    def _from_dict(d):
+        r = SleepRecord(user_id=d["user_id"], record_date=date.fromisoformat(d["record_date"]))
+        r.id = d["id"]
+        r.sleep_time = d.get("sleep_time")
+        r.wake_time = d.get("wake_time")
+        r.duration_hours = d.get("duration_hours", 0)
+        r.quality = d.get("quality", 3)
+        r.note = d.get("note", "")
+        r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return r
+
+
+class JSONMoodStorage(_JSONStorageBase):
+    def __init__(self, filepath="mood_records.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, record: MoodRecord):
+        items = self._read_all()
+        d = record.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == record.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, start_date=None, end_date=None):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") != user_id:
+                continue
+            rd = date.fromisoformat(r["record_date"])
+            if start_date and rd < start_date:
+                continue
+            if end_date and rd > end_date:
+                continue
+            result.append(self._from_dict(r))
+        result.sort(key=lambda x: x.record_date, reverse=True)
+        return result
+
+    def delete(self, record_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != record_id])
+
+    @staticmethod
+    def _from_dict(d):
+        r = MoodRecord(user_id=d["user_id"], record_date=date.fromisoformat(d["record_date"]))
+        r.id = d["id"]
+        r.mood = d.get("mood", "neutral")
+        r.energy = d.get("energy", 3)
+        r.note = d.get("note", "")
+        r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return r
+
+
+class JSONHealthStorage(_JSONStorageBase):
+    def __init__(self, filepath="health_records.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, record: HealthRecord):
+        items = self._read_all()
+        d = record.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == record.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, start_date=None, end_date=None):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") != user_id:
+                continue
+            rd = date.fromisoformat(r["record_date"])
+            if start_date and rd < start_date:
+                continue
+            if end_date and rd > end_date:
+                continue
+            result.append(self._from_dict(r))
+        result.sort(key=lambda x: x.record_date, reverse=True)
+        return result
+
+    def delete(self, record_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != record_id])
+
+    @staticmethod
+    def _from_dict(d):
+        r = HealthRecord(user_id=d["user_id"], record_date=date.fromisoformat(d["record_date"]))
+        r.id = d["id"]
+        r.exercise_type = d.get("exercise_type", "")
+        r.exercise_minutes = d.get("exercise_minutes", 0)
+        r.exercise_calories = d.get("exercise_calories", 0)
+        r.water_ml = d.get("water_ml", 0)
+        r.steps = d.get("steps", 0)
+        r.weight_kg = d.get("weight_kg", 0.0)
+        r.note = d.get("note", "")
+        r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return r
+
+
+class JSONFinanceStorage(_JSONStorageBase):
+    def __init__(self, filepath="finance_records.json"):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            self._write_all([])
+
+    def save(self, record: FinanceRecord):
+        items = self._read_all()
+        d = record.to_dict()
+        for i, r in enumerate(items):
+            if r["id"] == record.id:
+                items[i] = d
+                self._write_all(items)
+                return
+        items.append(d)
+        self._write_all(items)
+
+    def get_by_user(self, user_id, start_date=None, end_date=None):
+        result = []
+        for r in self._read_all():
+            if r.get("user_id") != user_id:
+                continue
+            rd = date.fromisoformat(r["record_date"])
+            if start_date and rd < start_date:
+                continue
+            if end_date and rd > end_date:
+                continue
+            result.append(self._from_dict(r))
+        result.sort(key=lambda x: x.record_date, reverse=True)
+        return result
+
+    def delete(self, record_id):
+        items = self._read_all()
+        self._write_all([r for r in items if r["id"] != record_id])
+
+    @staticmethod
+    def _from_dict(d):
+        r = FinanceRecord(user_id=d["user_id"], record_date=date.fromisoformat(d["record_date"]))
+        r.id = d["id"]
+        r.amount = d.get("amount", 0.0)
+        r.record_type = d.get("record_type", "expense")
+        r.category = d.get("category", "")
+        r.note = d.get("note", "")
+        r.created_at = datetime.fromisoformat(d["created_at"]) if d.get("created_at") else datetime.now()
+        return r

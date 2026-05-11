@@ -125,4 +125,25 @@ export default {
 
   // Report
   getReport: (type) => json(`${API}/stats/report?type=${type}`),
+
+  // Sleep
+  getSleep: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/sleep?${q}`) },
+  createSleep: (data) => post(`${API}/sleep`, data),
+  deleteSleep: (id) => del(`${API}/sleep/${id}`),
+
+  // Mood
+  getMood: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/mood?${q}`) },
+  createMood: (data) => post(`${API}/mood`, data),
+  deleteMood: (id) => del(`${API}/mood/${id}`),
+
+  // Health
+  getHealth: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/health?${q}`) },
+  createHealth: (data) => post(`${API}/health`, data),
+  deleteHealth: (id) => del(`${API}/health/${id}`),
+
+  // Finance
+  getFinance: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/finance?${q}`) },
+  createFinance: (data) => post(`${API}/finance`, data),
+  deleteFinance: (id) => del(`${API}/finance/${id}`),
+  getFinanceSummary: (start, end) => { const q = new URLSearchParams(); if (start) q.set('start', start); if (end) q.set('end', end); return json(`${API}/finance/summary?${q}`) },
 }

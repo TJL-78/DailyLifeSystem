@@ -334,3 +334,96 @@ class SharedActivity:
             "permission": self.permission,
             "created_at": self.created_at.isoformat(),
         }
+
+
+@dataclass
+class SleepRecord:
+    """A daily sleep record."""
+    user_id: str
+    record_date: date
+    sleep_time: Optional[str] = None  # HH:MM format
+    wake_time: Optional[str] = None   # HH:MM format
+    duration_hours: float = 0.0
+    quality: int = 3  # 1-5 rating
+    note: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id,
+            "record_date": self.record_date.isoformat(),
+            "sleep_time": self.sleep_time, "wake_time": self.wake_time,
+            "duration_hours": self.duration_hours, "quality": self.quality,
+            "note": self.note, "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class MoodRecord:
+    """A daily mood entry."""
+    user_id: str
+    record_date: date
+    mood: str = "neutral"  # happy, calm, sad, angry, tired, excited, anxious, neutral
+    energy: int = 3  # 1-5
+    note: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id,
+            "record_date": self.record_date.isoformat(),
+            "mood": self.mood, "energy": self.energy,
+            "note": self.note, "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class HealthRecord:
+    """Daily health data (exercise, water, etc)."""
+    user_id: str
+    record_date: date
+    exercise_type: str = ""  # running, walking, gym, yoga, cycling, swimming, other
+    exercise_minutes: int = 0
+    exercise_calories: int = 0
+    water_ml: int = 0
+    steps: int = 0
+    weight_kg: float = 0.0
+    note: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id,
+            "record_date": self.record_date.isoformat(),
+            "exercise_type": self.exercise_type,
+            "exercise_minutes": self.exercise_minutes,
+            "exercise_calories": self.exercise_calories,
+            "water_ml": self.water_ml, "steps": self.steps,
+            "weight_kg": self.weight_kg, "note": self.note,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass
+class FinanceRecord:
+    """A financial transaction record."""
+    user_id: str
+    record_date: date
+    amount: float = 0.0
+    record_type: str = "expense"  # income or expense
+    category: str = ""  # food, transport, shopping, entertainment, salary, other
+    note: str = ""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id, "user_id": self.user_id,
+            "record_date": self.record_date.isoformat(),
+            "amount": self.amount, "record_type": self.record_type,
+            "category": self.category, "note": self.note,
+            "created_at": self.created_at.isoformat(),
+        }

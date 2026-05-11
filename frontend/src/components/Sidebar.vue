@@ -47,6 +47,19 @@
       <router-link to="/tags" class="nav-item" :class="{ active: $route.name === 'tags' }">
         <span class="nav-icon">#</span><span>{{ t('tagsNav') }}</span>
       </router-link>
+      <div class="nav-section">{{ t('healthLifeSection') }}</div>
+      <router-link to="/sleep" class="nav-item" :class="{ active: $route.name === 'sleep' }">
+        <span class="nav-icon">☾</span><span>{{ t('sleepNav') }}</span>
+      </router-link>
+      <router-link to="/mood" class="nav-item" :class="{ active: $route.name === 'mood' }">
+        <span class="nav-icon">☺</span><span>{{ t('moodNav') }}</span>
+      </router-link>
+      <router-link to="/health" class="nav-item" :class="{ active: $route.name === 'health' }">
+        <span class="nav-icon">♥</span><span>{{ t('healthNav') }}</span>
+      </router-link>
+      <router-link to="/finance" class="nav-item" :class="{ active: $route.name === 'finance' }">
+        <span class="nav-icon">¥</span><span>{{ t('financeNav') }}</span>
+      </router-link>
       <div class="nav-section">{{ t('categoryLabel') }}</div>
       <router-link v-for="cat in store.categories" :key="cat.id"
         :to="'/activities?category=' + cat.id" class="nav-item">

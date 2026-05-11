@@ -15,6 +15,10 @@ import Tags from '../views/Tags.vue'
 import Kanban from '../views/Kanban.vue'
 import Timeline from '../views/Timeline.vue'
 import Report from '../views/Report.vue'
+import Sleep from '../views/Sleep.vue'
+import Mood from '../views/Mood.vue'
+import Health from '../views/Health.vue'
+import Finance from '../views/Finance.vue'
 
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard },
@@ -33,6 +37,10 @@ const routes = [
   { path: '/kanban', name: 'kanban', component: Kanban },
   { path: '/timeline', name: 'timeline', component: Timeline },
   { path: '/report', name: 'report', component: Report },
+  { path: '/sleep', name: 'sleep', component: Sleep },
+  { path: '/mood', name: 'mood', component: Mood },
+  { path: '/health', name: 'health', component: Health },
+  { path: '/finance', name: 'finance', component: Finance },
 ]
 
 export default createRouter({

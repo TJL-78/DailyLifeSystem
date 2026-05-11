@@ -35,15 +35,19 @@ if _use_mysql:
     journal_storage = MySQLJournalStorage(_db)
     journal_comment_storage = MySQLJournalCommentStorage(_db)
     # New features fall back to JSON storage when MySQL classes are not available
-    from .json_storage import JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage
+    from .json_storage import JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage, JSONSleepStorage, JSONMoodStorage, JSONHealthStorage, JSONFinanceStorage
     pomodoro_storage = JSONPomodoroStorage("pomodoro_sessions.json")
     goal_storage = JSONGoalStorage("goals.json")
     goal_progress_storage = JSONGoalProgressStorage("goal_progress.json")
     template_storage = JSONTemplateStorage("templates.json")
     shared_activity_storage = JSONSharedActivityStorage("shared_activities.json")
+    sleep_storage = JSONSleepStorage("sleep_records.json")
+    mood_storage = JSONMoodStorage("mood_records.json")
+    health_storage = JSONHealthStorage("health_records.json")
+    finance_storage = JSONFinanceStorage("finance_records.json")
 else:
     from .user_storage import JSONUserStorage
-    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage, JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage
+    from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage, JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage, JSONSleepStorage, JSONMoodStorage, JSONHealthStorage, JSONFinanceStorage
     user_storage = JSONUserStorage("users.json")
     category_storage = JSONCategoryStorage("categories.json")
     activity_storage = JSONActivityStorage("activities.json")
@@ -56,6 +60,10 @@ else:
     goal_progress_storage = JSONGoalProgressStorage("goal_progress.json")
     template_storage = JSONTemplateStorage("templates.json")
     shared_activity_storage = JSONSharedActivityStorage("shared_activities.json")
+    sleep_storage = JSONSleepStorage("sleep_records.json")
+    mood_storage = JSONMoodStorage("mood_records.json")
+    health_storage = JSONHealthStorage("health_records.json")
+    finance_storage = JSONFinanceStorage("finance_records.json")
 
 
 def get_current_user_id(request: Request) -> str:
