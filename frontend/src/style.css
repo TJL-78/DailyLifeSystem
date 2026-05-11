@@ -225,3 +225,20 @@ a:hover { text-decoration: underline; }
 [data-theme="dark"] .tooltip-overlay { background: rgba(0,0,0,0.6) !important; }
 [data-theme="dark"] .date-nav button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
 [data-theme="dark"] .date-nav input { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #e0e0e8 !important; }
+
+/* Dashboard dark mode */
+[data-theme="dark"] .dash-section { background: #22223a !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .greeting-text { color: #9a9ab0 !important; }
+[data-theme="dark"] .stats-grid .stat-card { background: #22223a !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .stat-label { color: #9a9ab0 !important; }
+[data-theme="dark"] .habit-row { border-bottom-color: #2a2a44 !important; }
+[data-theme="dark"] .badge-done { background: #064e3b !important; color: #34d399 !important; }
+[data-theme="dark"] .badge-not { background: #451a03 !important; color: #fbbf24 !important; }
+[data-theme="dark"] .goal-detail { color: #9a9ab0 !important; }
+[data-theme="dark"] .goal-pct { color: #818cf8 !important; }
+[data-theme="dark"] .progress-bar { background: #2a2a44 !important; }
+[data-theme="dark"] .qa-journal { color: #1a1a2e !important; }
+
+/* Categories dark mode */
+[data-theme="dark"] .cat-item { background: #22223a !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .cat-name { color: #e0e0e8 !important; }
