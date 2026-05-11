@@ -197,7 +197,7 @@ async function deleteComment(j, c) {
   j._comments = await api.getJournalComments(j.id) || []
 }
 
-onMounted(async () => { await loadJournals(); await loadExistingJournal() })
+onMounted(async () => { await loadJournals() })
 </script>
 
 <style scoped>

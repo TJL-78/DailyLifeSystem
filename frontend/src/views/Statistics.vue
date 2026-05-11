@@ -46,13 +46,22 @@
       <div v-if="categoryDetails.length" class="category-pies">
         <div v-for="(cat, ci) in categoryDetails" :key="cat.name" class="cat-pie-card">
           <div class="cat-pie-header">
-            <svg viewBox="0 0 120 120" class="cat-pie-svg">
-              <circle v-for="(s, si) in cat.slices" :key="si"
-                cx="60" cy="60" r="50"
-                fill="none" :stroke="s.color" stroke-width="20"
-                :stroke-dasharray="s.dash" :stroke-dashoffset="s.offset"
-              />
-            </svg>
+            <div class="cat-pie-wrap">
+              <svg viewBox="0 0 120 120" class="cat-pie-svg" :class="{ spinning: cat._spinning }" @click="toggleSpin(ci)">
+                <circle v-for="(s, si) in cat.slices" :key="si"
+                  cx="60" cy="60" r="50"
+                  fill="none" :stroke="s.color" stroke-width="20"
+                  :stroke-dasharray="s.dash" :stroke-dashoffset="s.offset"
+                  class="pie-slice"
+                  @mouseenter="showTooltip($event, cat, si)"
+                  @mouseleave="hideTooltip"
+                />
+              </svg>
+              <div v-if="tooltip.visible" class="pie-tooltip" :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }">
+                <div class="tooltip-name">{{ tooltip.name }}</div>
+                <div class="tooltip-detail">{{ tooltip.minutes }}{{ t('minutes') }} ({{ tooltip.pct }}%)</div>
+              </div>
+            </div>
             <div class="cat-pie-info">
               <div class="cat-pie-name" :style="{ color: cat.color }">{{ cat.name }}</div>
               <div class="cat-pie-total">{{ cat.total_minutes }}{{ t('minutes') }}</div>
@@ -80,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from '../i18n'
 import { useAppStore } from '../stores/app'
 import api from '../api'
@@ -88,6 +97,34 @@ import api from '../api'
 const { t } = useI18n()
 const store = useAppStore()
 const detailed = ref({})
+const tooltip = reactive({ visible: false, name: '', minutes: 0, pct: '', x: 0, y: 0 })
+const spinningSet = ref(new Set())
+
+function showTooltip(event, cat, sliceIndex) {
+  const task = cat.tasks[sliceIndex]
+  if (!task) return
+  const total = cat.total_minutes || 1
+  const rect = event.target.closest('.cat-pie-wrap').getBoundingClientRect()
+  tooltip.name = task.title
+  tooltip.minutes = task.minutes
+  tooltip.pct = ((task.minutes / total) * 100).toFixed(1)
+  tooltip.x = event.clientX - rect.left + 10
+  tooltip.y = event.clientY - rect.top - 30
+  tooltip.visible = true
+}
+
+function hideTooltip() {
+  tooltip.visible = false
+}
+
+function toggleSpin(ci) {
+  if (spinningSet.value.has(ci)) {
+    spinningSet.value.delete(ci)
+  } else {
+    spinningSet.value.add(ci)
+  }
+  spinningSet.value = new Set(spinningSet.value) // trigger reactivity
+}
 const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 const taskColors = ['#6366f1', '#14b8a6', '#f97316', '#e11d48', '#a855f7', '#0ea5e9', '#eab308', '#22c55e', '#f43f5e', '#8b5cf6']
 
@@ -125,6 +162,7 @@ const categoryDetails = computed(() => {
       total_minutes: cat.total_minutes,
       tasks: cat.tasks,
       slices,
+      _spinning: spinningSet.value.has(ci),
     }
   })
 })
@@ -189,7 +227,15 @@ onMounted(load)
 .category-pies { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
 .cat-pie-card { background: #fafbfd; border: 1px solid #eef0f4; border-radius: 14px; padding: 20px; }
 .cat-pie-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-.cat-pie-svg { width: 100px; height: 100px; flex-shrink: 0; }
+.cat-pie-svg { width: 100px; height: 100px; flex-shrink: 0; cursor: pointer; transition: transform 0.3s; }
+.cat-pie-svg.spinning { animation: pie-spin 4s linear infinite; }
+@keyframes pie-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.cat-pie-wrap { position: relative; flex-shrink: 0; }
+.pie-slice { cursor: pointer; transition: opacity 0.2s; }
+.pie-slice:hover { opacity: 0.7; stroke-width: 24; }
+.pie-tooltip { position: absolute; background: rgba(26,26,46,0.92); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; pointer-events: none; white-space: nowrap; z-index: 10; }
+.tooltip-name { font-weight: 700; }
+.tooltip-detail { font-size: 11px; color: #c4c8e0; margin-top: 2px; }
 .cat-pie-info { flex: 1; }
 .cat-pie-name { font-size: 16px; font-weight: 700; }
 .cat-pie-total { font-size: 20px; font-weight: 800; color: #1a1a2e; margin-top: 2px; }
