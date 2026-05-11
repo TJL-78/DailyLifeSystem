@@ -34,12 +34,26 @@ _pkg_dir = os.path.dirname(os.path.abspath(__file__))
 app.mount("/uploads/avatars", StaticFiles(directory=UPLOAD_DIR), name="avatars")
 app.mount("/uploads/journals", StaticFiles(directory=JOURNAL_IMG_DIR), name="journal_images")
 
-# Mount Vue static assets
+# Mount Vue static assets — serve at /assets/ to match Vite default base path
 _vue_dir = os.path.join(_pkg_dir, "static", "vue")
 if os.path.isdir(_vue_dir):
     _vue_assets = os.path.join(_vue_dir, "assets")
     if os.path.isdir(_vue_assets):
-        app.mount("/static/vue/assets", StaticFiles(directory=_vue_assets), name="vue_assets")
+        app.mount("/assets", StaticFiles(directory=_vue_assets), name="vue_assets")
+
+
+# Serve Vue public files (favicon, icons, etc.)
+@app.get("/favicon.svg")
+def favicon():
+    path = os.path.join(_vue_dir, "favicon.svg")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/svg+xml")
+
+@app.get("/icons.svg")
+def icons():
+    path = os.path.join(_vue_dir, "icons.svg")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/svg+xml")
 
 # Templates
 _template_dir = os.path.join(_pkg_dir, "templates")
