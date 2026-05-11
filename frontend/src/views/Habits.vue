@@ -69,7 +69,9 @@ async function load() {
   start.setDate(start.getDate() - 30)
   for (const h of habits.value) {
     const recs = await api.getHabitRecords(h.id, dateStr(start), dateStr(today)) || []
-    records.value[h.id] = Array.isArray(recs) ? recs.map(r => r.date || r) : []
+    const dates = Array.isArray(recs) ? recs.map(r => r.record_date || r.date || r) : []
+    records.value[h.id] = dates
+    h.current_streak = dates.length
   }
 }
 
