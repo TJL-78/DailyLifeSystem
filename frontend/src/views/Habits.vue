@@ -70,8 +70,11 @@ async function load() {
   for (const h of habits.value) {
     const recs = await api.getHabitRecords(h.id, dateStr(start), dateStr(today)) || []
     const dates = Array.isArray(recs) ? recs.map(r => r.record_date || r.date || r) : []
-    records.value[h.id] = dates
-    h.current_streak = dates.length
+    const uniqueDates = [...new Set(dates)]
+    records.value[h.id] = uniqueDates
+    // Count checked cells that appear in the 30-day grid
+    const gridDates = getDays({ id: h.id }).filter(d => d.checked).length
+    h.current_streak = gridDates
   }
 }
 
