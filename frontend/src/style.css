@@ -195,3 +195,33 @@ a:hover { text-decoration: underline; }
 [data-theme="dark"] input:focus,
 [data-theme="dark"] select:focus,
 [data-theme="dark"] textarea:focus { border-color: #818cf8 !important; background: #2a2a44 !important; }
+
+/* Calendar view dark mode */
+[data-theme="dark"] .cal-grid { background: #1e1e36 !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .cal-weekday { background: #22223a !important; color: #9a9ab0 !important; }
+[data-theme="dark"] .cal-day { color: #e0e0e8 !important; }
+[data-theme="dark"] .cal-day:hover { background: #2a2a44 !important; }
+[data-theme="dark"] .cal-day.other { color: #555570 !important; }
+[data-theme="dark"] .cal-day.selected { background: #2a2a5a !important; }
+[data-theme="dark"] .cal-title { color: #e0e0e8 !important; }
+[data-theme="dark"] .cal-header button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
+[data-theme="dark"] .cal-header button:hover { background: #3a3a54 !important; }
+[data-theme="dark"] .day-num { color: #e0e0e8 !important; }
+[data-theme="dark"] .day-detail { background: #22223a !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .day-detail h3 { color: #e0e0e8 !important; }
+
+/* Timeline view dark mode */
+[data-theme="dark"] .timeline-grid { background: #1e1e36 !important; border-color: #2a2a44 !important; }
+[data-theme="dark"] .hour-row { border-bottom-color: #2a2a44 !important; }
+[data-theme="dark"] .hour-label { color: #9a9ab0 !important; }
+[data-theme="dark"] .hour-cell { background: #1e1e36 !important; }
+[data-theme="dark"] .unscheduled-section { background: #22223a !important; }
+[data-theme="dark"] .unscheduled-section h3 { color: #c0c0d0 !important; }
+[data-theme="dark"] .unscheduled-item { background: #2a2a44 !important; color: #e0e0e8 !important; }
+[data-theme="dark"] .tooltip-card { background: #22223a !important; color: #e0e0e8 !important; }
+[data-theme="dark"] .tooltip-card h4 { color: #e0e0e8 !important; }
+[data-theme="dark"] .tooltip-card p { color: #c0c0d0 !important; }
+[data-theme="dark"] .tooltip-card button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
+[data-theme="dark"] .tooltip-overlay { background: rgba(0,0,0,0.6) !important; }
+[data-theme="dark"] .date-nav button { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #c0c0d0 !important; }
+[data-theme="dark"] .date-nav input { background: #2a2a44 !important; border-color: #3a3a54 !important; color: #e0e0e8 !important; }
