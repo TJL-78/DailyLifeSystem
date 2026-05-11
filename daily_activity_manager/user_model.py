@@ -7,6 +7,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
+try:
+    import bcrypt
+    _USE_BCRYPT = True
+except ImportError:
+    _USE_BCRYPT = False
+
 
 @dataclass
 class User:
@@ -22,7 +28,10 @@ class User:
 
     @staticmethod
     def hash_password(password: str, salt: Optional[str] = None) -> str:
-        """Hash a password with salt."""
+        """Hash a password. Uses bcrypt if available, else SHA256 with salt."""
+        if _USE_BCRYPT:
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+            return "bcrypt$" + hashed.decode()
         if salt is None:
             salt = os.urandom(16).hex()
         hashed = hashlib.sha256((salt + password).encode()).hexdigest()
@@ -31,6 +40,11 @@ class User:
     @staticmethod
     def verify_password(password: str, password_hash: str) -> bool:
         """Verify a password against its hash."""
+        if password_hash.startswith("bcrypt$"):
+            if not _USE_BCRYPT:
+                return False
+            stored = password_hash[7:].encode()
+            return bcrypt.checkpw(password.encode(), stored)
         salt, hashed = password_hash.split("$", 1)
         return User.hash_password(password, salt) == password_hash
 

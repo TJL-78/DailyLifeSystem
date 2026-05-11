@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from ..schemas import CategoryCreateRequest, CategoryUpdateRequest
-from ..deps import get_current_user_id, category_storage
+from ..deps import get_current_user_id, category_storage, activity_storage
 from ..models import Category
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
@@ -53,5 +53,10 @@ def delete_category(cat_id: str, user_id: str = Depends(get_current_user_id)):
     cat = category_storage.get(cat_id)
     if not cat or cat.user_id != user_id:
         return JSONResponse({"error": "not found"}, status_code=404)
+    # Clear category_id on activities that reference this category
+    activities = activity_storage.get_by_user(user_id, category_id=cat_id)
+    for a in activities:
+        a.category_id = None
+        activity_storage.save(a)
     category_storage.delete(cat_id)
     return {"message": "deleted"}

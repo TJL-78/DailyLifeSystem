@@ -10,27 +10,11 @@
       </div>
       <div class="form-row">
         <label>{{ t('weather') }}</label>
-        <select v-model="form.weather">
-          <option value="">--</option>
-          <option value="sunny">{{ t('weatherSunny') }}</option>
-          <option value="cloudy">{{ t('weatherCloudy') }}</option>
-          <option value="overcast">{{ t('weatherOvercast') }}</option>
-          <option value="rainy">{{ t('weatherRainy') }}</option>
-          <option value="snowy">{{ t('weatherSnowy') }}</option>
-          <option value="windy">{{ t('weatherWindy') }}</option>
-        </select>
+        <input v-model="form.weather" type="text" :placeholder="t('weatherPlaceholder')" />
       </div>
       <div class="form-row">
         <label>{{ t('mood') }}</label>
-        <select v-model="form.mood">
-          <option value="">--</option>
-          <option value="happy">{{ t('moodHappy') }}</option>
-          <option value="calm">{{ t('moodCalm') }}</option>
-          <option value="sad">{{ t('moodSad') }}</option>
-          <option value="angry">{{ t('moodAngry') }}</option>
-          <option value="tired">{{ t('moodTired') }}</option>
-          <option value="excited">{{ t('moodExcited') }}</option>
-        </select>
+        <input v-model="form.mood" type="text" :placeholder="t('moodPlaceholder')" />
       </div>
       <div class="form-row">
         <label>{{ t('journalContent') }}</label>
@@ -65,24 +49,8 @@
           <option value="">{{ t('allMonths') }}</option>
           <option v-for="m in 12" :key="m" :value="String(m).padStart(2, '0')">{{ m }}</option>
         </select>
-        <select v-model="filterWeather">
-          <option value="">{{ t('allWeather') }}</option>
-          <option value="sunny">{{ t('weatherSunny') }}</option>
-          <option value="cloudy">{{ t('weatherCloudy') }}</option>
-          <option value="overcast">{{ t('weatherOvercast') }}</option>
-          <option value="rainy">{{ t('weatherRainy') }}</option>
-          <option value="snowy">{{ t('weatherSnowy') }}</option>
-          <option value="windy">{{ t('weatherWindy') }}</option>
-        </select>
-        <select v-model="filterMood">
-          <option value="">{{ t('allMood') }}</option>
-          <option value="happy">{{ t('moodHappy') }}</option>
-          <option value="calm">{{ t('moodCalm') }}</option>
-          <option value="sad">{{ t('moodSad') }}</option>
-          <option value="angry">{{ t('moodAngry') }}</option>
-          <option value="tired">{{ t('moodTired') }}</option>
-          <option value="excited">{{ t('moodExcited') }}</option>
-        </select>
+        <input v-model="filterWeather" :placeholder="t('filterWeather')" class="filter-input" />
+        <input v-model="filterMood" :placeholder="t('filterMood')" class="filter-input" />
       </div>
 
       <div v-if="!filteredJournals.length" class="empty">{{ t('noJournals') }}</div>
@@ -131,10 +99,10 @@ const filterMonth = ref('')
 const filterWeather = ref('')
 const filterMood = ref('')
 
-const weatherMap = { sunny: 'weatherSunny', cloudy: 'weatherCloudy', overcast: 'weatherOvercast', rainy: 'weatherRainy', snowy: 'weatherSnowy', windy: 'weatherWindy' }
-const moodMap = { happy: 'moodHappy', calm: 'moodCalm', sad: 'moodSad', angry: 'moodAngry', tired: 'moodTired', excited: 'moodExcited' }
-function weatherLabel(w) { return t(weatherMap[w] || w) }
-function moodLabel(m) { return t(moodMap[m] || m) }
+const weatherMap = {}
+const moodMap = {}
+function weatherLabel(w) { return w || '' }
+function moodLabel(m) { return m || '' }
 
 function renderMarkdown(text) {
   if (!text) return ''
@@ -143,7 +111,12 @@ function renderMarkdown(text) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/_(.+?)_/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+      if (/^(https?:\/\/|\/)/i.test(url)) {
+        return `<a href="${url}" target="_blank" rel="noopener">${label}</a>`
+      }
+      return `${label} (${url})`
+    })
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
     .replace(/\n/g, '<br>')
@@ -154,8 +127,8 @@ const filteredJournals = computed(() => {
   return journals.value.filter(j => {
     if (searchQuery.value && !j.content?.toLowerCase().includes(searchQuery.value.toLowerCase())) return false
     if (filterMonth.value && j.journal_date && !j.journal_date.slice(5, 7).includes(filterMonth.value)) return false
-    if (filterWeather.value && j.weather !== filterWeather.value) return false
-    if (filterMood.value && j.mood !== filterMood.value) return false
+    if (filterWeather.value && !(j.weather || '').toLowerCase().includes(filterWeather.value.toLowerCase())) return false
+    if (filterMood.value && !(j.mood || '').toLowerCase().includes(filterMood.value.toLowerCase())) return false
     return true
   })
 })
@@ -250,6 +223,8 @@ onMounted(async () => { await loadJournals(); await loadExistingJournal() })
 .search-input { flex: 1; min-width: 200px; padding: 9px 14px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 13px; background: #fafbfd; }
 .search-input:focus { outline: none; border-color: #4f46e5; background: #fff; }
 .filter-bar select { padding: 9px 14px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; background: #fff; }
+.filter-input { padding: 9px 14px; border: 1px solid #eef0f4; border-radius: 8px; font-size: 12px; background: #fff; width: 120px; }
+.filter-input:focus { outline: none; border-color: #4f46e5; }
 .journal-card { background: #fff; border: 1px solid #eef0f4; border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
 .journal-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; cursor: pointer; }
 .journal-header:hover { background: #fafbfd; }

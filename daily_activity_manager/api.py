@@ -1,6 +1,8 @@
 """FastAPI Web API for the Daily Activity Management System."""
 
 import os
+import secrets
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, RedirectResponse
@@ -11,12 +13,19 @@ from starlette.middleware.sessions import SessionMiddleware
 from .routers import auth, activities, categories, habits, journals, stats, pomodoro, goals, backup
 from .deps import UPLOAD_DIR, JOURNAL_IMG_DIR
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Daily Activity Management System")
 
-# Session middleware
+# Session middleware — use SECRET_KEY env var or generate a random one
+_secret_key = os.environ.get("SECRET_KEY")
+if not _secret_key:
+    _secret_key = secrets.token_hex(32)
+    logger.warning("SECRET_KEY not set — using a random key. Sessions will not survive restarts. Set SECRET_KEY env var for production.")
+
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.environ.get("SECRET_KEY", "daily-life-system-secret-key-change-me"),
+    secret_key=_secret_key,
 )
 
 # Include routers

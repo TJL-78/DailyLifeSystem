@@ -12,7 +12,13 @@ async function request(url, options = {}) {
 async function json(url, options = {}) {
   const res = await request(url, options)
   if (!res) return null
-  return res.json()
+  const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data?.error || data?.detail || 'Request failed')
+    err.status = res.status
+    throw err
+  }
+  return data
 }
 
 function post(url, body) {
@@ -90,7 +96,7 @@ export default {
 
   // Heatmap
   getHeatmapData: (year) => json(`${API}/stats/heatmap?year=${year}`),
-  getMonthlyReport: (year, month) => json(`${API}/stats/monthly?year=${year}&month=${month}`),
+  getMonthlyReport: (year, month) => json(`${API}/stats/monthly-report?year=${year}&month=${month}`),
 
   // Templates
   getTemplates: () => json(`${API}/templates`),

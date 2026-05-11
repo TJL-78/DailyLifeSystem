@@ -133,16 +133,21 @@ async function cancelActivity(a) { await api.cancelActivity(a.id); await load() 
 async function deleteActivity(a) { if (!confirm(t('confirmDelete'))) return; await api.deleteActivity(a.id); await load() }
 
 async function saveAsTemplate(a) {
-  await api.createTemplate({
-    title: a.title,
-    description: a.description,
-    priority: a.priority,
-    category_id: a.category_id,
-    duration_minutes: a.duration_minutes,
-    tags: a.tags,
-  })
-  templateMsg.value = t('templateSaved')
-  setTimeout(() => templateMsg.value = '', 2000)
+  try {
+    await api.createTemplate({
+      title: a.title || '',
+      description: a.description || '',
+      priority: a.priority || 'medium',
+      category_id: a.category_id || null,
+      duration_minutes: a.duration_minutes || null,
+      tags: a.tags || [],
+    })
+    templateMsg.value = t('templateSaved')
+    setTimeout(() => templateMsg.value = '', 2000)
+  } catch (e) {
+    templateMsg.value = t('templateSaveFailed') || 'Failed to save template'
+    setTimeout(() => templateMsg.value = '', 2000)
+  }
 }
 
 onMounted(load)

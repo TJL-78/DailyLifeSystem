@@ -125,8 +125,10 @@ class JournalCommentCreateRequest(BaseModel):
 
 class PomodoroStartRequest(BaseModel):
     activity_id: Optional[str] = None
-    duration: Optional[int] = 25
+    duration: Optional[int] = None
+    duration_minutes: Optional[int] = None
     label: Optional[str] = None
+    status: Optional[str] = None
 
 
 class GoalCreateRequest(BaseModel):

@@ -2,26 +2,64 @@
 
 import json
 import os
+import fcntl
+import threading
 from typing import List, Optional
 from datetime import date, time, datetime
 from .models import Activity, ActivityStatus, ActivityPriority, RecurrenceType, Category, Habit, HabitRecord, Journal, JournalComment, PomodoroSession, Goal, GoalProgress, ActivityTemplate, SharedActivity
 
+# Per-file threading locks to prevent concurrent access within the same process
+_file_locks = {}
+_file_locks_lock = threading.Lock()
 
-class JSONCategoryStorage:
+
+def _get_lock(filepath: str) -> threading.Lock:
+    with _file_locks_lock:
+        if filepath not in _file_locks:
+            _file_locks[filepath] = threading.Lock()
+        return _file_locks[filepath]
+
+
+def _read_json(filepath: str) -> List[dict]:
+    lock = _get_lock(filepath)
+    with lock:
+        with open(filepath, "r", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
+            try:
+                return json.load(f)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def _write_json(filepath: str, data: List[dict]):
+    lock = _get_lock(filepath)
+    with lock:
+        with open(filepath, "w", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+
+
+class _JSONStorageBase:
+    """Base class providing locked read/write for all JSON storage classes."""
+    filepath: str
+
+    def _read_all(self) -> List[dict]:
+        return _read_json(self.filepath)
+
+    def _write_all(self, data):
+        _write_json(self.filepath, data)
+
+
+class JSONCategoryStorage(_JSONStorageBase):
     """JSON storage for categories."""
 
     def __init__(self, filepath: str = "categories.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, category: Category):
         cats = self._read_all()
@@ -65,21 +103,13 @@ class JSONCategoryStorage:
         return True
 
 
-class JSONActivityStorage:
+class JSONActivityStorage(_JSONStorageBase):
     """JSON storage for activities with user_id support."""
 
     def __init__(self, filepath: str = "activities.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, activity: Activity):
         activities = self._read_all()
@@ -170,21 +200,13 @@ class JSONActivityStorage:
         return a
 
 
-class JSONHabitStorage:
+class JSONHabitStorage(_JSONStorageBase):
     """JSON storage for habits."""
 
     def __init__(self, filepath: str = "habits.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self):
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, habit: Habit):
         habits = self._read_all()
@@ -230,21 +252,13 @@ class JSONHabitStorage:
         return True
 
 
-class JSONHabitRecordStorage:
+class JSONHabitRecordStorage(_JSONStorageBase):
     """JSON storage for habit records."""
 
     def __init__(self, filepath: str = "habit_records.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self):
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, record: HabitRecord):
         records = self._read_all()
@@ -287,21 +301,13 @@ class JSONHabitRecordStorage:
         return True
 
 
-class JSONJournalStorage:
+class JSONJournalStorage(_JSONStorageBase):
     """JSON storage for daily journals."""
 
     def __init__(self, filepath: str = "journals.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, journal: Journal):
         items = self._read_all()
@@ -353,21 +359,13 @@ class JSONJournalStorage:
         return j
 
 
-class JSONJournalCommentStorage:
+class JSONJournalCommentStorage(_JSONStorageBase):
     """JSON storage for journal comments."""
 
     def __init__(self, filepath: str = "journal_comments.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, comment: JournalComment):
         items = self._read_all()
@@ -416,21 +414,13 @@ class JSONJournalCommentStorage:
         self._write_all([c for c in items if c["journal_id"] != journal_id])
 
 
-class JSONPomodoroStorage:
+class JSONPomodoroStorage(_JSONStorageBase):
     """JSON storage for pomodoro sessions."""
 
     def __init__(self, filepath: str = "pomodoro_sessions.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, session: PomodoroSession):
         items = self._read_all()
@@ -478,21 +468,13 @@ class JSONPomodoroStorage:
         return s
 
 
-class JSONGoalStorage:
+class JSONGoalStorage(_JSONStorageBase):
     """JSON storage for goals."""
 
     def __init__(self, filepath: str = "goals.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, goal: Goal):
         items = self._read_all()
@@ -548,21 +530,13 @@ class JSONGoalStorage:
         return g
 
 
-class JSONGoalProgressStorage:
+class JSONGoalProgressStorage(_JSONStorageBase):
     """JSON storage for goal progress entries."""
 
     def __init__(self, filepath: str = "goal_progress.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, progress: GoalProgress):
         items = self._read_all()
@@ -596,21 +570,13 @@ class JSONGoalProgressStorage:
         self._write_all([p for p in items if p["goal_id"] != goal_id])
 
 
-class JSONTemplateStorage:
+class JSONTemplateStorage(_JSONStorageBase):
     """JSON storage for activity templates."""
 
     def __init__(self, filepath: str = "templates.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, template: ActivityTemplate):
         items = self._read_all()
@@ -661,21 +627,13 @@ class JSONTemplateStorage:
         return t
 
 
-class JSONSharedActivityStorage:
+class JSONSharedActivityStorage(_JSONStorageBase):
     """JSON storage for shared activity records."""
 
     def __init__(self, filepath: str = "shared_activities.json"):
         self.filepath = filepath
         if not os.path.exists(self.filepath):
             self._write_all([])
-
-    def _read_all(self) -> List[dict]:
-        with open(self.filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_all(self, data: List[dict]):
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, shared: SharedActivity):
         items = self._read_all()

@@ -14,13 +14,24 @@ router = APIRouter(prefix="/api/pomodoro", tags=["pomodoro"])
 
 @router.post("/sessions", status_code=201)
 def start_session(req: PomodoroStartRequest, user_id: str = Depends(get_current_user_id)):
+    duration = req.duration_minutes or req.duration or 25
+    initial_status = "completed" if req.status == "completed" else "active"
     session = PomodoroSession(
         user_id=user_id,
-        duration=req.duration or 25,
+        duration=duration,
         activity_id=req.activity_id,
         label=req.label,
-        status="active",
+        status=initial_status,
     )
+    if initial_status == "completed":
+        session.end_time = datetime.now()
+        # Add duration to linked activity
+        if session.activity_id:
+            activity = activity_storage.get(session.activity_id)
+            if activity and activity.user_id == user_id:
+                activity.duration_minutes = (activity.duration_minutes or 0) + duration
+                activity.updated_at = datetime.now()
+                activity_storage.save(activity)
     pomodoro_storage.save(session)
     return session.to_dict()
 

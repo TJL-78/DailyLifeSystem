@@ -36,7 +36,14 @@ def create_goal(req: GoalCreateRequest, user_id: str = Depends(get_current_user_
 @router.get("")
 def list_goals(user_id: str = Depends(get_current_user_id)):
     goals = goal_storage.get_by_user(user_id)
-    return [g.to_dict() for g in goals]
+    result = []
+    for g in goals:
+        d = g.to_dict()
+        # Aggregate current_value from progress entries
+        progress = goal_progress_storage.get_by_goal(g.id)
+        d["current_value"] = sum(p.value for p in progress)
+        result.append(d)
+    return result
 
 
 @router.put("/{goal_id}")

@@ -34,6 +34,13 @@ if _use_mysql:
     habit_record_storage = MySQLHabitRecordStorage(_db)
     journal_storage = MySQLJournalStorage(_db)
     journal_comment_storage = MySQLJournalCommentStorage(_db)
+    # New features fall back to JSON storage when MySQL classes are not available
+    from .json_storage import JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage
+    pomodoro_storage = JSONPomodoroStorage("pomodoro_sessions.json")
+    goal_storage = JSONGoalStorage("goals.json")
+    goal_progress_storage = JSONGoalProgressStorage("goal_progress.json")
+    template_storage = JSONTemplateStorage("templates.json")
+    shared_activity_storage = JSONSharedActivityStorage("shared_activities.json")
 else:
     from .user_storage import JSONUserStorage
     from .json_storage import JSONActivityStorage, JSONCategoryStorage, JSONHabitStorage, JSONHabitRecordStorage, JSONJournalStorage, JSONJournalCommentStorage, JSONPomodoroStorage, JSONGoalStorage, JSONGoalProgressStorage, JSONTemplateStorage, JSONSharedActivityStorage
