@@ -61,7 +61,7 @@
       <div v-if="!journals.length" class="empty">{{ t('noJournals') }}</div>
       <div v-for="j in journals" :key="j.id" class="journal-card">
         <div class="journal-header" @click="j._expanded = !j._expanded">
-          <div class="journal-date">{{ j.date }}</div>
+          <div class="journal-date">{{ j.journal_date }}</div>
           <div class="journal-tags">
             <span v-if="j.weather" class="jtag">{{ weatherLabel(j.weather) }}</span>
             <span v-if="j.mood" class="jtag">{{ moodLabel(j.mood) }}</span>
@@ -124,7 +124,13 @@ watch(() => form.value.date, loadExistingJournal)
 
 async function saveJournal() {
   if (!form.value.content.trim()) return
-  await api.saveJournal(form.value)
+  await api.saveJournal({
+    journal_date: form.value.date,
+    content: form.value.content,
+    weather: form.value.weather,
+    mood: form.value.mood,
+    images: form.value.images,
+  })
   saveMsg.value = t('journalSaved')
   setTimeout(() => saveMsg.value = '', 2000)
   await loadJournals()
