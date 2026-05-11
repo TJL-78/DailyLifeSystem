@@ -14,6 +14,9 @@
       <router-link to="/calendar" class="nav-item" :class="{ active: $route.name === 'calendar' }">
         <span class="nav-icon">○</span><span>{{ t('calendarView') }}</span>
       </router-link>
+      <router-link to="/timeline" class="nav-item" :class="{ active: $route.name === 'timeline' }">
+        <span class="nav-icon">▬</span><span>{{ t('timelineNav') }}</span>
+      </router-link>
       <router-link to="/habits" class="nav-item" :class="{ active: $route.name === 'habits' }">
         <span class="nav-icon">★</span><span>{{ t('habitTrack') }}</span>
       </router-link>
@@ -22,6 +25,9 @@
       </router-link>
       <router-link to="/statistics" class="nav-item" :class="{ active: $route.name === 'statistics' }">
         <span class="nav-icon">▲</span><span>{{ t('statistics') }}</span>
+      </router-link>
+      <router-link to="/report" class="nav-item" :class="{ active: $route.name === 'report' }">
+        <span class="nav-icon">📊</span><span>{{ t('reportNav') }}</span>
       </router-link>
       <router-link to="/pomodoro" class="nav-item" :class="{ active: $route.name === 'pomodoro' }">
         <span class="nav-icon">⏱</span><span>{{ t('pomodoroTitle') }}</span>

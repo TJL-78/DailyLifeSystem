@@ -13,6 +13,8 @@ import Heatmap from '../views/Heatmap.vue'
 import Templates from '../views/Templates.vue'
 import Tags from '../views/Tags.vue'
 import Kanban from '../views/Kanban.vue'
+import Timeline from '../views/Timeline.vue'
+import Report from '../views/Report.vue'
 
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard },
@@ -29,6 +31,8 @@ const routes = [
   { path: '/templates', name: 'templates', component: Templates },
   { path: '/tags', name: 'tags', component: Tags },
   { path: '/kanban', name: 'kanban', component: Kanban },
+  { path: '/timeline', name: 'timeline', component: Timeline },
+  { path: '/report', name: 'report', component: Report },
 ]
 
 export default createRouter({

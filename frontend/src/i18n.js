@@ -108,6 +108,15 @@ const I18N = {
     customDuration: '自定义', breakTime: '休息中', breakComplete: '休息结束！',
     startBreak: '开始休息', skipBreak: '跳过休息',
     soundOption: '提示音', soundShort: '短提示音', soundLong: '长提示音', soundMelody: '旋律提示音',
+    // Timeline
+    timelineNav: '时间线', timelineTitle: '时间线视图', prevDay: '前一天', nextDay: '后一天',
+    unscheduled: '未安排时间', currentTime: '当前时间', noTimelineActs: '当天无活动',
+    // Report
+    reportNav: '报告', reportTitle: '智能报告', dailyReport: '日报', weeklyReport: '周报',
+    generateReport: '生成报告', generating: '生成中...', copyReport: '复制到剪贴板',
+    exportMarkdown: '导出 Markdown', reportCopied: '已复制到剪贴板', noReportData: '暂无数据生成报告',
+    recommendations: '建议', activityOverview: '活动概览', timeAnalysis: '时间分析',
+    habitSummary: '习惯总结', journalSummary: '日志概况', goalProgress: '目标进度',
   },
   en: {
     appTitle: 'Activity Manager', dashboard: 'Dashboard', allActivities: 'All Activities',
@@ -214,6 +223,15 @@ const I18N = {
     customDuration: 'Custom', breakTime: 'Break Time', breakComplete: 'Break complete!',
     startBreak: 'Start Break', skipBreak: 'Skip Break',
     soundOption: 'Sound', soundShort: 'Short beep', soundLong: 'Long beep', soundMelody: 'Melody',
+    // Timeline
+    timelineNav: 'Timeline', timelineTitle: 'Timeline View', prevDay: 'Prev Day', nextDay: 'Next Day',
+    unscheduled: 'Unscheduled', currentTime: 'Now', noTimelineActs: 'No activities today',
+    // Report
+    reportNav: 'Report', reportTitle: 'Smart Report', dailyReport: 'Daily', weeklyReport: 'Weekly',
+    generateReport: 'Generate Report', generating: 'Generating...', copyReport: 'Copy to Clipboard',
+    exportMarkdown: 'Export Markdown', reportCopied: 'Copied to clipboard', noReportData: 'No data for report',
+    recommendations: 'Recommendations', activityOverview: 'Activity Overview', timeAnalysis: 'Time Analysis',
+    habitSummary: 'Habit Summary', journalSummary: 'Journal Summary', goalProgress: 'Goal Progress',
   }
 }
 

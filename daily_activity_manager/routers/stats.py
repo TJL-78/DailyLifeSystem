@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
-from ..deps import get_current_user_id, activity_storage, category_storage, habit_storage, habit_record_storage, pomodoro_storage, journal_storage
+from ..deps import get_current_user_id, activity_storage, category_storage, habit_storage, habit_record_storage, pomodoro_storage, journal_storage, goal_storage, goal_progress_storage
 from ..models import ActivityStatus
 
 router = APIRouter(tags=["stats"])
@@ -126,6 +126,137 @@ def get_heatmap(year: int = None, user_id: str = Depends(get_current_user_id)):
             d = r.record_date.isoformat()
             dates[d] = dates.get(d, 0) + 1
     return {"dates": dates}
+
+
+@router.get("/api/stats/report")
+def generate_report(type: str = "weekly", user_id: str = Depends(get_current_user_id)):
+    """Generate a structured daily or weekly report from user data."""
+    today_date = date.today()
+    if type == "daily":
+        start_date = today_date
+        end_date = today_date
+        date_range = today_date.isoformat()
+    else:
+        start_date = today_date - timedelta(days=today_date.weekday())
+        end_date = start_date + timedelta(days=6)
+        date_range = f"{start_date.isoformat()} ~ {end_date.isoformat()}"
+
+    all_acts = activity_storage.get_by_user(user_id)
+    period_acts = [a for a in all_acts if a.created_at.date() >= start_date and a.created_at.date() <= end_date]
+    completed_acts = [a for a in period_acts if a.status == ActivityStatus.COMPLETED]
+    total = len(period_acts)
+    comp = len(completed_acts)
+    rate = round(comp / total * 100, 1) if total > 0 else 0
+
+    cats = category_storage.get_by_user(user_id)
+    cat_map = {c.id: c.name for c in cats}
+    cat_counts = {}
+    for a in period_acts:
+        cname = cat_map.get(a.category_id, "未分类") if a.category_id else "未分类"
+        cat_counts[cname] = cat_counts.get(cname, 0) + 1
+
+    # Time analysis from pomodoro
+    all_sessions = pomodoro_storage.get_by_user(user_id)
+    period_sessions = [s for s in all_sessions if s.status == "completed" and s.start_time.date() >= start_date and s.start_time.date() <= end_date]
+    total_focus = sum(s.duration for s in period_sessions)
+    avg_session = round(total_focus / len(period_sessions), 1) if period_sessions else 0
+
+    # Time slot analysis
+    hour_counts = {}
+    for s in period_sessions:
+        h = s.start_time.hour
+        hour_counts[h] = hour_counts.get(h, 0) + 1
+    most_productive = max(hour_counts, key=hour_counts.get) if hour_counts else None
+    productive_str = f"{most_productive}:00-{most_productive+1}:00" if most_productive is not None else "N/A"
+
+    # Habits
+    habits = habit_storage.get_by_user(user_id)
+    habits_maintained = 0
+    streak_info = []
+    for h in habits:
+        records = habit_record_storage.get_by_habit(h.id, start_date, end_date)
+        if records:
+            habits_maintained += 1
+            streak_info.append(f"{h.name}: {len(records)}天")
+
+    # Journals
+    journals = journal_storage.get_by_user(user_id)
+    period_journals = [j for j in journals if j.journal_date >= start_date and j.journal_date <= end_date]
+    moods = [j.mood for j in period_journals if j.mood]
+
+    # Goals
+    goals = goal_storage.get_by_user(user_id)
+    goal_summaries = []
+    for g in goals:
+        progress_records = goal_progress_storage.get_by_goal(g.id)
+        current = sum(p.value for p in progress_records) if progress_records else 0
+        pct = round(current / g.target_value * 100, 1) if g.target_value else 0
+        goal_summaries.append(f"{g.title}: {pct}%")
+
+    # Build sections
+    sections = []
+    type_label = "日报" if type == "daily" else "周报"
+
+    sections.append({
+        "title": "活动概览",
+        "content": f"本{'日' if type == 'daily' else '周'}创建 {total} 个活动，完成 {comp} 个，完成率 {rate}%。",
+        "stats": {"总数": total, "已完成": comp, "完成率": f"{rate}%", **cat_counts}
+    })
+
+    sections.append({
+        "title": "时间分析",
+        "content": f"总专注 {total_focus} 分钟，共 {len(period_sessions)} 次番茄钟，平均每次 {avg_session} 分钟。最高效时段：{productive_str}。",
+        "stats": {"总专注分钟": total_focus, "番茄钟次数": len(period_sessions), "平均时长": f"{avg_session}min", "高效时段": productive_str}
+    })
+
+    sections.append({
+        "title": "习惯总结",
+        "content": f"共 {len(habits)} 个习惯，本期坚持 {habits_maintained} 个。" + (" " + "、".join(streak_info) if streak_info else ""),
+        "stats": {"总习惯": len(habits), "本期坚持": habits_maintained}
+    })
+
+    sections.append({
+        "title": "日志概况",
+        "content": f"记录 {len(period_journals)} 篇日志。" + (f" 心情关键词：{'、'.join(moods[:5])}" if moods else ""),
+        "stats": {"日志数": len(period_journals)}
+    })
+
+    sections.append({
+        "title": "目标进度",
+        "content": "、".join(goal_summaries) if goal_summaries else "暂无活跃目标。",
+        "stats": {"活跃目标": len(goals)}
+    })
+
+    # Recommendations
+    recommendations = []
+    if rate < 50 and total > 0:
+        recommendations.append("完成率较低，建议适当减少任务数量或拆分大任务。")
+    if total_focus < 60 and type == "weekly":
+        recommendations.append("本周专注时间不足 1 小时，建议每天安排至少一个番茄钟。")
+    if habits_maintained < len(habits) // 2 and len(habits) > 0:
+        recommendations.append("部分习惯未坚持，建议设置提醒或减少习惯数量。")
+    if len(period_journals) == 0:
+        recommendations.append("本期未写日志，建议每天花几分钟记录心得。")
+    if not recommendations:
+        recommendations.append("各项数据表现良好，继续保持！")
+
+    # Raw text
+    raw_lines = [f"# {type_label}\n", f"日期范围：{date_range}\n"]
+    for s in sections:
+        raw_lines.append(f"\n## {s['title']}\n\n{s['content']}\n")
+    if recommendations:
+        raw_lines.append("\n## 建议\n")
+        for r in recommendations:
+            raw_lines.append(f"- {r}\n")
+    raw_text = "".join(raw_lines)
+
+    return {
+        "type": type,
+        "date_range": date_range,
+        "sections": sections,
+        "recommendations": recommendations,
+        "raw_text": raw_text,
+    }
 
 
 @router.get("/api/stats/monthly-report")

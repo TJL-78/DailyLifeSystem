@@ -122,4 +122,7 @@ export default {
 
   // Recurring
   generateRecurring: () => post(`${API}/activities/generate-recurring`, {}),
+
+  // Report
+  getReport: (type) => json(`${API}/stats/report?type=${type}`),
 }
