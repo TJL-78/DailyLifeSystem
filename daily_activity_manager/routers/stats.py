@@ -16,7 +16,13 @@ router = APIRouter(tags=["stats"])
 
 @router.get("/api/stats")
 def get_stats(user_id: str = Depends(get_current_user_id)):
-    return activity_storage.get_stats(user_id)
+    raw = activity_storage.get_stats(user_id)
+    # Flatten by_status into top-level keys for Dashboard.vue
+    by_status = raw.get("by_status", {})
+    raw["pending"] = by_status.get("pending", 0)
+    raw["in_progress"] = by_status.get("in_progress", 0)
+    raw["completed"] = by_status.get("completed", 0)
+    return raw
 
 
 @router.get("/api/stats/detailed")
@@ -37,7 +43,7 @@ def get_detailed_stats(user_id: str = Depends(get_current_user_id)):
         week_end = week_start + timedelta(days=6)
         created = len([a for a in all_acts if a.created_at.date() >= week_start and a.created_at.date() <= week_end])
         completed = len([a for a in all_acts if a.completed_at and a.completed_at.date() >= week_start and a.completed_at.date() <= week_end])
-        weekly.append({"week": week_start.isoformat(), "created": created, "completed": completed})
+        weekly.append({"week": week_start.isoformat(), "new_count": created, "completed_count": completed})
 
     total_minutes = sum(a.duration_minutes or 0 for a in all_acts if a.status == ActivityStatus.COMPLETED)
 
@@ -57,13 +63,15 @@ def get_detailed_stats(user_id: str = Depends(get_current_user_id)):
         })
 
     return {
-        "by_category": by_category,
+        "category_distribution": by_category,
         "weekly_trend": weekly,
         "total_completed_minutes": total_minutes,
+        "total_time": total_minutes,
         "total": len(all_acts),
+        "total_completed": len([a for a in all_acts if a.status == ActivityStatus.COMPLETED]),
         "completed": len([a for a in all_acts if a.status == ActivityStatus.COMPLETED]),
         "pending": len([a for a in all_acts if a.status == ActivityStatus.PENDING]),
-        "category_time": list(category_time.values()),
+        "category_time": {ct["name"]: ct["total_minutes"] for ct in category_time.values()},
     }
 
 

@@ -42,7 +42,7 @@ def calendar_activities(request: Request, start: str = None, end: str = None, us
 def list_activities(request: Request, status: str = None, priority: str = None,
                     category_id: str = None, today: str = None,
                     user_id: str = Depends(get_current_user_id)):
-    today_only = (today or "").lower() == "true"
+    today_only = bool(today and today not in ("0", "false", ""))
     scheduled_date = date.today() if today_only else None
     activities = activity_storage.get_by_user(
         user_id, status=status, priority=priority,
