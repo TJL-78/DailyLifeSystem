@@ -7,5 +7,10 @@ habits.json
 habit_records.json
 journals.json
 journal_comments.json
+goals.json
+goal_progress.json
+pomodoro_sessions.json
+templates.json
+shared_activities.json
 uploads/
 frontend/node_modules/
